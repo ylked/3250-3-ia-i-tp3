@@ -1,1 +1,1 @@
-# 3251-3-ia-i-tp3
+# Intelligence artificielle I - TP3 : Le Compte Est Bon
