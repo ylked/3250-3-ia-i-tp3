@@ -5,6 +5,7 @@ Nous souhaitons réaliser une IA basée sur les algorithmes génétiques permett
 
 import random
 from enum import Enum
+import textwrap
 
 
 """
@@ -71,9 +72,16 @@ def decode(chromosome: str) -> str:
         str: a translated string from the input chromosome in an human-readable format
     """
 
-    # TODO : implement the function
+    genes = textwrap.wrap(chromosome, 4)
+    result = ""
+    for gene in genes:
+        if(len(gene) == 4 and gene in lookup_genes.keys()):
+            result += lookup_genes[gene]
+            result += " "
+        else:
+            print("*** [Warning] Error when decoding a chromosome, gene \"" + gene + "\" is incorrect. The output may be incomplete")
 
-    return chromosome
+    return result
 
 
 def evaluate(chromosome: str) -> float:
@@ -285,14 +293,14 @@ if __name__ == "__main__":
     f=fitness(chromosome=solution, target=target)
     d=decode(chromosome=solution)
     e=evaluate(chromosome=solution)
-    print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}") 
+    print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}")
 
     # Ou l'intégralité de la population:
     for c in sorted_population:
         f=fitness(chromosome=c, target=target)
         d=decode(chromosome=c)
         e=evaluate(chromosome=c)
-        print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ") 
+        print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
 
     # Tests et optimisation des hyper-paramètres
     # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des "bonnes" valeurs!
