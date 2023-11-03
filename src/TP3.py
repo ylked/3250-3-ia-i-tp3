@@ -61,6 +61,20 @@ class GeneType(Enum):
     NUMBER = 2
     INVALID = 3
 
+def switch_type(type: Enum):
+    if(type == GeneType.OPERATOR):
+        return GeneType.NUMBER
+    if(type == GeneType.NUMBER):
+        return GeneType.OPERATOR
+    return GeneType.INVALID
+
+def get_gene_type(gene: str):
+    if(gene in lookup_types["operators"]):
+        return GeneType.OPERATOR
+    if(gene in lookup_types["numbers"]):
+        return GeneType.NUMBER
+    return GeneType.INVALID
+
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
     example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1" as a result
@@ -74,13 +88,17 @@ def decode(chromosome: str) -> str:
 
     genes = textwrap.wrap(chromosome, 4)
     result = ""
+    expected_type = GeneType.NUMBER
     for gene in genes:
-        if(len(gene) == 4 and gene in lookup_genes.keys()):
+        type = get_gene_type(gene)
+        print(type)
+        if(len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type):
             result += lookup_genes[gene]
             result += " "
-        else:
-            print("*** [Warning] Error when decoding a chromosome, gene \"" + gene + "\" is incorrect. The output may be incomplete")
-
+            expected_type = switch_type(expected_type)
+    if expected_type == GeneType.NUMBER:
+        result = result[:-2]
+    result = result[:-1]
     return result
 
 
@@ -281,26 +299,28 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
 
 if __name__ == "__main__":
 
-    nb_individuals = 20
-    nb_genes = 5
-    target = 4.5
-    sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=10)
-    solution=sorted_population[0]
+    print(decode("0010001010101110101101110010"))
 
-    # Nous pouvons maintenant regarder le meilleur individu:
-    scores = [fitness(chromosome, target) for chromosome in sorted_population]
-    print(f"***TARGET***: {target}")
-    f=fitness(chromosome=solution, target=target)
-    d=decode(chromosome=solution)
-    e=evaluate(chromosome=solution)
-    print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}")
-
-    # Ou l'intégralité de la population:
-    for c in sorted_population:
-        f=fitness(chromosome=c, target=target)
-        d=decode(chromosome=c)
-        e=evaluate(chromosome=c)
-        print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
+    # nb_individuals = 20
+    # nb_genes = 5
+    # target = 4.5
+    # sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=10)
+    # solution=sorted_population[0]
+    #
+    # # Nous pouvons maintenant regarder le meilleur individu:
+    # scores = [fitness(chromosome, target) for chromosome in sorted_population]
+    # print(f"***TARGET***: {target}")
+    # f=fitness(chromosome=solution, target=target)
+    # d=decode(chromosome=solution)
+    # e=evaluate(chromosome=solution)
+    # print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}")
+    #
+    # # Ou l'intégralité de la population:
+    # for c in sorted_population:
+    #     f=fitness(chromosome=c, target=target)
+    #     d=decode(chromosome=c)
+    #     e=evaluate(chromosome=c)
+    #     print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
 
     # Tests et optimisation des hyper-paramètres
     # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des "bonnes" valeurs!
