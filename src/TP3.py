@@ -4,6 +4,7 @@ Nous souhaitons réaliser une IA basée sur les algorithmes génétiques permett
 """
 
 import random
+from enum import Enum
 
 
 """
@@ -31,6 +32,33 @@ lookup_genes = {
     "1101": "/",
 }
 
+lookup_types = {
+    "operators":
+        [
+            "1010",
+            "1011",
+            "1100",
+            "1101",
+        ],
+    "numbers":
+        [
+            "0000",
+            "0001",
+            "0010",
+            "0011",
+            "0100",
+            "0101",
+            "0110",
+            "0111",
+            "1000",
+            "1001",
+        ]
+}
+
+class GeneType(Enum):
+    OPERATOR = 1
+    NUMBER = 2
+    INVALID = 3
 
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
