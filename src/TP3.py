@@ -35,15 +35,7 @@ lookup_genes = {
 class GeneType(Enum):
     OPERATOR = 1
     NUMBER = 2
-    def is_op(self):
-        return self.name == GeneType.OPERATOR
-
-    def is_nb(self):
-        return self.name == GeneType.NUMBER
-
-    def switch(self):
-        return GeneType.NUMBER if self.is_op() else GeneType.OPERATOR
-
+    INVALID = 3
 
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
