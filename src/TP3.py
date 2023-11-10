@@ -118,9 +118,48 @@ def evaluate(chromosome: str) -> float:
         float: the result of the sequence of digits and operators
     """
 
-    # TODO : implement the function
+    def number(x:str):
+        assert is_number(x)
+        return int(x)
+    def is_number(x):
+        return x.isdigit() and 0 <= int(x) < 10
 
-    return chromosome
+    def is_op(x):
+        return x in operations
+
+    def is_valid(x):
+        return is_op(x) or is_number(x)
+
+    operations = {
+        '+' : lambda x,y : x+y,
+        '-' : lambda x,y : x-y,
+        '*' : lambda x,y : x*y,
+        '/' : lambda x,y : x/y
+    }
+
+    op = None
+    res = None
+
+    for value in decode(chromosome).split():
+        assert is_valid(value)
+
+        if is_op(value):
+            op = value
+
+        elif is_number(value) and res is None:
+            res = number(value)
+
+        elif is_number(value) and res is not None:
+            assert op is not None
+            res = operations[op](res, number(value))
+
+        elif is_op(value):
+            op = value
+
+        else:
+            assert False
+
+    return float(res)
 
 
 """
