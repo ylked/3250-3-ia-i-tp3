@@ -5,6 +5,7 @@ Nous souhaitons réaliser une IA basée sur les algorithmes génétiques permett
 
 import random
 from enum import Enum
+import textwrap
 
 
 """
@@ -60,6 +61,20 @@ class GeneType(Enum):
     NUMBER = 2
     INVALID = 3
 
+def switch_type(type: Enum):
+    if(type == GeneType.OPERATOR):
+        return GeneType.NUMBER
+    if(type == GeneType.NUMBER):
+        return GeneType.OPERATOR
+    return GeneType.INVALID
+
+def get_gene_type(gene: str):
+    if(gene in lookup_types["operators"]):
+        return GeneType.OPERATOR
+    if(gene in lookup_types["numbers"]):
+        return GeneType.NUMBER
+    return GeneType.INVALID
+
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
     example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1" as a result
@@ -71,9 +86,25 @@ def decode(chromosome: str) -> str:
         str: a translated string from the input chromosome in an human-readable format
     """
 
-    # TODO : implement the function
+    #initialisation
+    genes = textwrap.wrap(chromosome, 4)
+    result = ""
+    expected_type = GeneType.NUMBER
 
-    return chromosome
+    for gene in genes:
+        type = get_gene_type(gene)
+        # ignore if gene is invalid, or not of type expected
+        if(len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type):
+            result += lookup_genes[gene]
+            result += " "
+            # update expected type
+            expected_type = switch_type(expected_type)
+    # if the last gene was an operator, ignore it
+    if expected_type == GeneType.NUMBER:
+        result = result[:-2]
+    # remove last space
+    result = result[:-1]
+    return result
 
 
 def evaluate(chromosome: str) -> float:
@@ -285,14 +316,14 @@ if __name__ == "__main__":
     f=fitness(chromosome=solution, target=target)
     d=decode(chromosome=solution)
     e=evaluate(chromosome=solution)
-    print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}") 
+    print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}")
 
     # Ou l'intégralité de la population:
     for c in sorted_population:
         f=fitness(chromosome=c, target=target)
         d=decode(chromosome=c)
         e=evaluate(chromosome=c)
-        print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ") 
+        print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
 
     # Tests et optimisation des hyper-paramètres
     # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des "bonnes" valeurs!
