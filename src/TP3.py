@@ -127,7 +127,7 @@ def crossover_x_part(chromosome_1, chromosome_2, n, between_genes):
             start = i * length_part
             end = start + length_part
             print(f"start: {start}")
-            print("stop: " + str(end))
+            print(f"stop: {end}")
 
             if (i == n - 1):
                 end = len(c_1)
