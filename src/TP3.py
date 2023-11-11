@@ -83,7 +83,7 @@ def get_gene_type(gene: str):
         return GeneType.NUMBER
     return GeneType.INVALID
 
-def crossover_each_x_bit(chromosome_1,chromosome_2,n):
+def crossover_each_x_bit(chromosome_1, chromosome_2, n):
     chromosome_1 = list(chromosome_1)
     chromosome_2 = list(chromosome_2)
     c_1 = chromosome_1
