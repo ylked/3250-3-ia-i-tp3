@@ -61,6 +61,14 @@ class GeneType(Enum):
     NUMBER = 2
     INVALID = 3
 
+class CrossoverType(Enum):
+    EXCHANGE_EACH_X_BIT = 1
+    EXCHANGE_EACH_X_GENE = 2
+    EXCHANGE_X_PARTS = 3
+    EXCHANGE_X_PARTS_BETWEEN_GENES = 4
+
+CROSSOVER_METHOD = (CrossoverType.EXCHANGE_X_PARTS, 4)
+
 def switch_type(type: Enum):
     if(type == GeneType.OPERATOR):
         return GeneType.NUMBER
@@ -74,6 +82,59 @@ def get_gene_type(gene: str):
     if(gene in lookup_types["numbers"]):
         return GeneType.NUMBER
     return GeneType.INVALID
+
+def crossover_each_x_bit(chromosome_1, chromosome_2, n):
+    chromosome_1 = list(chromosome_1)
+    chromosome_2 = list(chromosome_2)
+    c_1 = chromosome_1
+    c_2 = chromosome_2
+    if len(chromosome_2) < len(chromosome_1):
+        c_1 = chromosome_2
+        c_2 = chromosome_1
+
+    step = n
+    if CROSSOVER_METHOD[0] == CrossoverType.EXCHANGE_EACH_X_GENE:
+        step = n * 4
+
+    change = True
+    for i in range(0, len(c_1), step):
+        start = i - step
+        end = i
+        if change:
+            c_1[start:end] = c_2[start:end]
+        elif i+step >= len(c_1):
+            c_1[end+1:] = c_2[end+1:len(c_1)]
+        change = not change
+
+    return "".join(c_1)
+
+def crossover_x_part(chromosome_1, chromosome_2, n, between_genes):
+    chromosome_1 = list(chromosome_1)
+    chromosome_2 = list(chromosome_2)
+    c_1 = chromosome_1
+    c_2 = chromosome_2
+    if len(chromosome_2) < len(chromosome_1):
+        c_1 = chromosome_2
+        c_2 = chromosome_1
+    length_part = len(c_1) // n
+    if(between_genes):
+        nb_gene = len(c_1) // 4
+        length_part = (nb_gene // n) * 4
+    change = True
+    for i in range(n):
+        print(f"iter {i}")
+        if(change):
+            start = i * length_part
+            end = start + length_part
+            print(f"start: {start}")
+            print(f"stop: {end}")
+
+            if (i == n - 1):
+                end = len(c_1)
+            c_1[start:end] = c_2[start:end]
+        change = not change
+
+    return "".join(c_1)
 
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
@@ -209,10 +270,15 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
     Returns:
         str: a list containing the childrens of the two parents as strings of "0" and "1"
     """
-
-    # TODO : implement the function
-    return chromosome_1
-
+    match CROSSOVER_METHOD[0]:
+        case CrossoverType.EXCHANGE_EACH_X_BIT:
+            return crossover_each_x_bit(chromosome_1, chromosome_2,CROSSOVER_METHOD[1])
+        case CrossoverType.EXCHANGE_EACH_X_GENE:
+            return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1] * 4)
+        case CrossoverType.EXCHANGE_X_PARTS:
+            return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], False)
+        case CrossoverType.EXCHANGE_X_PARTS_BETWEEN_GENES:
+            return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], True)
 
 def population_crossover(population: [str]) -> [str]:
     """Performs the crossover over the entire population (or a subpart of it)
