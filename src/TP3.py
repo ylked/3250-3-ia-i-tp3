@@ -321,8 +321,115 @@ def mutation(chromosome: str) -> str:
         str: the mutated chromosome as a string of "0" and "1"
     """
 
-    # TODO : implement the function
-    return chromosome
+    def invert_bit(bit: str) -> str:
+        assert bit in ['0', '1'], 'Invalid bit value'
+        return '0' if bit == '1' else '1'
+
+    def get_x_distinct_random_numbers(max_value: int, x: int) -> tuple:
+        s = set()
+        while len(s) < x:
+            s.add(random.randint(0, max_value))
+        return tuple(s)
+
+    def invert_one_bit_of_x_genes(_chromosome: str, x: int):
+        # split chromosome by genes
+        genes = textwrap.wrap(_chromosome, 4)
+
+        # randomly select the genes to be mutated
+        genes_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
+
+        # mutate a random bit in the selected genes
+        for i in genes_indices:
+            # split string as list
+            gene_as_list = list(genes[i])
+
+            # select the random bit
+            index = random.randint(0, 3)
+
+            # mutate it
+            gene_as_list[index] = invert_bit(gene_as_list[index])
+
+            # join list as string
+            mutated_gene = "".join(gene_as_list)
+
+            # replace it in the list of genes
+            genes[i] = mutated_gene
+
+        return "".join(genes)
+
+    def invert_x_bits(_chromosome: str, x: int):
+        chromosome_as_list = list(_chromosome)
+
+        # randomly select x distinct bits to be mutated
+        bit_indices = get_x_distinct_random_numbers(len(_chromosome) - 1, x)
+
+        # mutated the selected bits
+        for i in bit_indices:
+            chromosome_as_list[i] = invert_bit(chromosome_as_list[i])
+
+        return "".join(chromosome_as_list)
+
+    def invert_all_bits_of_x_genes(_chromosome: str, x: int):
+        # split chromosome by genes
+        genes = textwrap.wrap(_chromosome, 4)
+
+        genes_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
+        print(genes_indices, x)
+
+        # mutate all the bits in the selected genes
+        for i in genes_indices:
+            # split gene string as list
+            gene_as_list = list(genes[i])
+            print(gene_as_list)
+
+            # mutate all the bits
+            for j in range(4):
+                gene_as_list[j] = invert_bit(gene_as_list[j])
+
+            # join gene list as string
+            mutated_gene = "".join(gene_as_list)
+
+            # replace it in the list of genes
+            genes[i] = mutated_gene
+
+        return "".join(genes)
+
+    def scramble_all_bits_of_x_genes(_chromosome: str, x: int):
+        # split chromosome by genes
+        genes = textwrap.wrap(_chromosome, 4)
+
+        # randomly select the genes to be scrambled
+        gene_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
+
+        for i in gene_indices:
+            # split string as list
+            gene_as_list = list(genes[i])
+
+            # scramble the gene
+            random.shuffle(gene_as_list)
+
+            # replace the gene in the list
+            genes[i] = "".join(gene_as_list)
+
+        return "".join(genes)
+
+    method, value = MUTATION_METHOD
+
+    match method:
+        case MutationMethod.INVERT_X_BITS:
+            return invert_x_bits(chromosome, value)
+
+        case MutationMethod.INVERT_ONE_BIT_OF_X_GENES:
+            return invert_one_bit_of_x_genes(chromosome, value)
+
+        case MutationMethod.INVERT_ALL_BITS_OF_X_GENES:
+            return invert_all_bits_of_x_genes(chromosome, value)
+
+        case MutationMethod.SCRAMBLE_ALL_BITS_OF_X_GENES:
+            return scramble_all_bits_of_x_genes(chromosome, value)
+
+        case _:
+            assert False, 'Mutation not implemented yet'
 
 
 def selection(population: [str], scores: [float]) -> [str]:
