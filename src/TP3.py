@@ -69,6 +69,23 @@ class CrossoverType(Enum):
 
 CROSSOVER_METHOD = (CrossoverType.EXCHANGE_X_PARTS, 4)
 
+class MutationMethod(Enum):
+    # mutates x random bits of the whole chromosome (switching value 0 <-> 1)
+    INVERT_X_BITS = 1
+
+    # mutates one random bit of X random genes (switching value 0 <-> 1)
+    INVERT_ONE_BIT_OF_X_GENES = 2
+
+    # mutates all the bits of X random genes
+    INVERT_ALL_BITS_OF_X_GENES = 3
+
+    # randomly scramble all the bits of X random genes
+    SCRAMBLE_ALL_BITS_OF_X_GENES = 4
+
+
+# default mutation method
+MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
+
 def switch_type(type: Enum):
     if(type == GeneType.OPERATOR):
         return GeneType.NUMBER
