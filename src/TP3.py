@@ -94,7 +94,7 @@ def crossover_each_x_bit(chromosome_1,chromosome_2,n):
 
     step = n
     if CROSSOVER_METHOD[0] == CrossoverType.EXCHANGE_EACH_X_GENE:
-        step = n*4
+        step = n * 4
 
     change = True
     for i in range(0, len(c_1), step):
