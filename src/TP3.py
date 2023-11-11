@@ -97,7 +97,7 @@ def crossover_each_x_bit(chromosome_1,chromosome_2,n):
         step = n*4
 
     change = True
-    for i in range(0,len(c_1), step):
+    for i in range(0, len(c_1), step):
         start = i - step
         end = i
         if change:
