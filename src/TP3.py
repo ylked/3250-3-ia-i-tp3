@@ -121,7 +121,7 @@ def crossover_x_part(chromosome_1, chromosome_2, n, between_genes):
         nb_gene = len(c_1) // 4
         length_part = (nb_gene // n) * 4
     change = True
-    for i in range(0, n):
+    for i in range(n):
         print(f"iter {i}")
         if(change):
             start = i*length_part
