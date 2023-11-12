@@ -102,17 +102,17 @@ FITNESS_METHOD = FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP
 
 
 def switch_type(type: Enum):
-    if (type == GeneType.OPERATOR):
+    if type == GeneType.OPERATOR:
         return GeneType.NUMBER
-    if (type == GeneType.NUMBER):
+    if type == GeneType.NUMBER:
         return GeneType.OPERATOR
     return GeneType.INVALID
 
 
 def get_gene_type(gene: str):
-    if (gene in lookup_types["operators"]):
+    if gene in lookup_types["operators"]:
         return GeneType.OPERATOR
-    if (gene in lookup_types["numbers"]):
+    if gene in lookup_types["numbers"]:
         return GeneType.NUMBER
     return GeneType.INVALID
 
@@ -137,7 +137,7 @@ def decode(chromosome: str) -> str:
     for gene in genes:
         type = get_gene_type(gene)
         # ignore if gene is invalid, or not of type expected
-        if (len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type):
+        if len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type:
             result += lookup_genes[gene]
             result += " "
             # update expected type
@@ -505,7 +505,7 @@ def generate(nb_individuals: int, nb_genes: int) -> [str]:
     """
 
     try:
-        population = random.sample(range(2 ** (4 * (nb_genes))), nb_individuals)
+        population = random.sample(range(2 ** (4 * nb_genes)), nb_individuals)
         population = [pad(bin(c)[2:], (4 * nb_genes)) for c in population]
     except OverflowError:
         pop_1 = generate(nb_individuals, nb_genes // 2)
