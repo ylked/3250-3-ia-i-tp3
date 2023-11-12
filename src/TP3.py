@@ -7,14 +7,11 @@ import random
 from enum import Enum
 import textwrap
 
-
 """
 ***********************************************************************************************************
 Commencez par implémenter les fonctions `decode` et `evaluate`, en reprenant les signatures ci-dessous.
 ***********************************************************************************************************
 """
-
-
 
 lookup_genes = {
     "0000": "0",
@@ -56,10 +53,12 @@ lookup_types = {
         ]
 }
 
+
 class GeneType(Enum):
     OPERATOR = 1
     NUMBER = 2
     INVALID = 3
+
 
 class CrossoverType(Enum):
     EXCHANGE_EACH_X_BIT = 1
@@ -67,7 +66,9 @@ class CrossoverType(Enum):
     EXCHANGE_X_PARTS = 3
     EXCHANGE_X_PARTS_BETWEEN_GENES = 4
 
+
 CROSSOVER_METHOD = (CrossoverType.EXCHANGE_X_PARTS, 4)
+
 
 class MutationMethod(Enum):
     # mutates x random bits of the whole chromosome (switching value 0 <-> 1)
@@ -86,27 +87,31 @@ class MutationMethod(Enum):
 # default mutation method
 MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
 
+
 class FitnessMethod(Enum):
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value
+    # return the absolute value of the difference between the result of the chromosome and the goal value
     DISTANCE_TO_VALUE = 1
 
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value,
+    # return the absolute value of the difference between the result of the chromosome and the goal value,
     # substracted by the number of genes
     DISTANCE_TO_VALUE_MINUS_NB_OP = 2
 
+
 FITNESS_METHOD = FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP
 
+
 def switch_type(type: Enum):
-    if(type == GeneType.OPERATOR):
+    if (type == GeneType.OPERATOR):
         return GeneType.NUMBER
-    if(type == GeneType.NUMBER):
+    if (type == GeneType.NUMBER):
         return GeneType.OPERATOR
     return GeneType.INVALID
 
+
 def get_gene_type(gene: str):
-    if(gene in lookup_types["operators"]):
+    if (gene in lookup_types["operators"]):
         return GeneType.OPERATOR
-    if(gene in lookup_types["numbers"]):
+    if (gene in lookup_types["numbers"]):
         return GeneType.NUMBER
     return GeneType.INVALID
 
@@ -122,7 +127,7 @@ def decode(chromosome: str) -> str:
         str: a translated string from the input chromosome in an human-readable format
     """
 
-    #initialisation
+    # initialisation
     genes = textwrap.wrap(chromosome, 4)
     result = ""
     expected_type = GeneType.NUMBER
@@ -130,7 +135,7 @@ def decode(chromosome: str) -> str:
     for gene in genes:
         type = get_gene_type(gene)
         # ignore if gene is invalid, or not of type expected
-        if(len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type):
+        if (len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type):
             result += lookup_genes[gene]
             result += " "
             # update expected type
@@ -154,9 +159,10 @@ def evaluate(chromosome: str) -> float:
         float: the result of the sequence of digits and operators
     """
 
-    def number(x:str):
+    def number(x: str):
         assert is_number(x)
         return int(x)
+
     def is_number(x):
         return x.isdigit() and 0 <= int(x) < 10
 
@@ -167,10 +173,10 @@ def evaluate(chromosome: str) -> float:
         return is_op(x) or is_number(x)
 
     operations = {
-        '+' : lambda x,y : x+y,
-        '-' : lambda x,y : x-y,
-        '*' : lambda x,y : x*y,
-        '/' : lambda x,y : x/y
+        '+': lambda x, y: x + y,
+        '-': lambda x, y: x - y,
+        '*': lambda x, y: x * y,
+        '/': lambda x, y: x / y
     }
 
     op = None
@@ -309,13 +315,14 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
 
     match CROSSOVER_METHOD[0]:
         case CrossoverType.EXCHANGE_EACH_X_BIT:
-            return crossover_each_x_bit(chromosome_1, chromosome_2,CROSSOVER_METHOD[1])
+            return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1])
         case CrossoverType.EXCHANGE_EACH_X_GENE:
             return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1] * 4)
         case CrossoverType.EXCHANGE_X_PARTS:
             return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], False)
         case CrossoverType.EXCHANGE_X_PARTS_BETWEEN_GENES:
             return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], True)
+
 
 def population_crossover(population: [str]) -> [str]:
     """Performs the crossover over the entire population (or a subpart of it)
@@ -543,12 +550,11 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
 
         # over ?
         # TODO : implement the condition to stop the genetic algorithm
-        best_individual=None
+        best_individual = None
         cond = False
 
     # TODO: sort population DESC (see docstring) before returning
     return population
-
 
 
 if __name__ == "__main__":
@@ -557,21 +563,21 @@ if __name__ == "__main__":
     nb_genes = 5
     target = 4.5
     sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=10)
-    solution=sorted_population[0]
+    solution = sorted_population[0]
 
     # Nous pouvons maintenant regarder le meilleur individu:
     scores = [fitness(chromosome, target) for chromosome in sorted_population]
     print(f"***TARGET***: {target}")
-    f=fitness(chromosome=solution, target=target)
-    d=decode(chromosome=solution)
-    e=evaluate(chromosome=solution)
+    f = fitness(chromosome=solution, target=target)
+    d = decode(chromosome=solution)
+    e = evaluate(chromosome=solution)
     print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}")
 
     # Ou l'intégralité de la population:
     for c in sorted_population:
-        f=fitness(chromosome=c, target=target)
-        d=decode(chromosome=c)
-        e=evaluate(chromosome=c)
+        f = fitness(chromosome=c, target=target)
+        d = decode(chromosome=c)
+        e = evaluate(chromosome=c)
         print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
 
     # Tests et optimisation des hyper-paramètres
