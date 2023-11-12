@@ -101,10 +101,10 @@ class FitnessMethod(Enum):
 FITNESS_METHOD = FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP
 
 
-def switch_type(type: Enum):
-    if type == GeneType.OPERATOR:
+def switch_type(gene_type: Enum):
+    if gene_type == GeneType.OPERATOR:
         return GeneType.NUMBER
-    if type == GeneType.NUMBER:
+    if gene_type == GeneType.NUMBER:
         return GeneType.OPERATOR
     return GeneType.INVALID
 
@@ -135,9 +135,9 @@ def decode(chromosome: str) -> str:
     expected_type = GeneType.NUMBER
 
     for gene in genes:
-        type = get_gene_type(gene)
+        gene_type = get_gene_type(gene)
         # ignore if gene is invalid, or not of type expected
-        if len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type:
+        if len(gene) == 4 and gene in lookup_genes.keys() and gene_type == expected_type:
             result += lookup_genes[gene]
             result += " "
             # update expected type
