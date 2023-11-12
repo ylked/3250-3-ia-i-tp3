@@ -101,22 +101,6 @@ class FitnessMethod(Enum):
 FITNESS_METHOD = FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP
 
 
-def switch_type(gene_type: Enum):
-    if gene_type == GeneType.OPERATOR:
-        return GeneType.NUMBER
-    if gene_type == GeneType.NUMBER:
-        return GeneType.OPERATOR
-    return GeneType.INVALID
-
-
-def get_gene_type(gene: str):
-    if gene in lookup_types["operators"]:
-        return GeneType.OPERATOR
-    if gene in lookup_types["numbers"]:
-        return GeneType.NUMBER
-    return GeneType.INVALID
-
-
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
     example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1"
@@ -128,6 +112,20 @@ def decode(chromosome: str) -> str:
     Returns:
         str: a translated string from the input chromosome in an human-readable format
     """
+
+    def switch_type(gene_type: Enum):
+        if gene_type == GeneType.OPERATOR:
+            return GeneType.NUMBER
+        if gene_type == GeneType.NUMBER:
+            return GeneType.OPERATOR
+        return GeneType.INVALID
+
+    def get_gene_type(gene: str):
+        if gene in lookup_types["operators"]:
+            return GeneType.OPERATOR
+        if gene in lookup_types["numbers"]:
+            return GeneType.NUMBER
+        return GeneType.INVALID
 
     # initialisation
     genes = textwrap.wrap(chromosome, 4)
