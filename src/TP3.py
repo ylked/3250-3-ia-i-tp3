@@ -89,11 +89,12 @@ MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
 
 
 class FitnessMethod(Enum):
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value
+    # return the opposite (negative) of absolute value of the difference between the result of the chromosome
+    # and the goal value
     DISTANCE_TO_VALUE = 1
 
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value,
-    # substracted by the number of genes
+    # return the opposite (negative) of absolute value of the difference between the result of the chromosome
+    # and the goal value, substracted by the number of genes
     DISTANCE_TO_VALUE_MINUS_NB_OP = 2
 
 
@@ -118,7 +119,8 @@ def get_gene_type(gene: str):
 
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
-    example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1" as a result
+    example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1"
+    as a result
 
     Args:
         chromosome (str): a string of "0" and "1" that represents a possible sequence of operators and digits
@@ -478,7 +480,8 @@ def selection(population: [str], scores: [float]) -> [str]:
 ***********************************************************************************************************
 Initialisation de la population
     Vous pouvez utiliser la fonction suivante pour générer la population initiale. 
-    Comme précédemment, n'hésitez pas à modifier les paramètres (surtout la taille de la population et le nombre de gènes!)
+    Comme précédemment, n'hésitez pas à modifier les paramètres (surtout la taille de la population et le nombre
+    de gènes!)
 ***********************************************************************************************************
 """
 
@@ -515,7 +518,8 @@ def generate(nb_individuals: int, nb_genes: int) -> [str]:
 """
 ***********************************************************************************************************
 L'algorithme génétique
-    Nous pouvons maintenant implémenter les étapes principales de l'algorithme génétique (n'hésitez pas à essayer différentes version).
+    Nous pouvons maintenant implémenter les étapes principales de l'algorithme génétique (n'hésitez pas à essayer
+    différentes version).
 ***********************************************************************************************************
 """
 
@@ -530,7 +534,8 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         limit_sec (float): maximum number of seconds allowed, must return a solution before this limit!
 
     Returns:
-        [str]: the last population, sorted by fitness value, descending: best fitness (highest) is 1st, i.e., the best solution
+        [str]: the last population, sorted by fitness value, descending: best fitness (highest) is 1st, i.e., the
+        best solution
     """
 
     # initialization
@@ -581,5 +586,7 @@ if __name__ == "__main__":
         print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
 
     # Tests et optimisation des hyper-paramètres
-    # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des "bonnes" valeurs!
-    # Testez différentes valeurs des paramètres, et créez un plot qui affiche un fitness (p. ex. du meilleur, moyenne) en fonction du nombre d'itérations.
+    # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des
+    # "bonnes" valeurs!
+    # Testez différentes valeurs des paramètres, et créez un plot qui affiche un fitness (p. ex. du meilleur, moyenne)
+    # en fonction du nombre d'itérations.
