@@ -219,10 +219,17 @@ def fitness(chromosome: str, target: float) -> float:
         float: The fitness value of the chromosome
     """
 
-    # TODO : implement the function
+    def get_distance_to_value(chromosome: str, target: float):
+        return - abs(target - evaluate(chromosome))
 
-    fitness_value = 0
-    return fitness_value
+    def get_nb_op(chromosome: str):
+        return len(chromosome) // 4
+
+    match FITNESS_METHOD:
+        case FitnessMethod.DISTANCE_TO_VALUE:
+            return get_distance_to_value(chromosome, target)
+        case FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP:
+            return get_distance_to_value(chromosome, target) - get_nb_op(chromosome)
 
 
 """
