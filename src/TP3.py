@@ -7,15 +7,13 @@ import random
 from enum import Enum
 import textwrap
 
-
 """
 ***********************************************************************************************************
 Commencez par implémenter les fonctions `decode` et `evaluate`, en reprenant les signatures ci-dessous.
 ***********************************************************************************************************
 """
 
-
-
+# lookup dict to get the values of the genes
 lookup_genes = {
     "0000": "0",
     "0001": "1",
@@ -33,6 +31,7 @@ lookup_genes = {
     "1101": "/",
 }
 
+# lookup dict to get the type of the genes
 lookup_types = {
     "operators":
         [
@@ -56,18 +55,30 @@ lookup_types = {
         ]
 }
 
+
 class GeneType(Enum):
     OPERATOR = 1
     NUMBER = 2
     INVALID = 3
 
-class CrossoverType(Enum):
+
+class CrossoverMethod(Enum):
+    # each x bit, exchange the value of the bit from chromomose 1 with the one from chromosome 2
     EXCHANGE_EACH_X_BIT = 1
+
+    # each x gene, exchange the value of the gene from chromomose 1 with the one from chromosome 2
     EXCHANGE_EACH_X_GENE = 2
+
+    # divide the chromosomes in x parts, and exchange the value of the 2 chromosome every 2 parts
     EXCHANGE_X_PARTS = 3
+
+    # divide the chromosome in x parts, but between the genes to keep them intact, and exchange the value of the
+    # 2 chromosome every 2 parts
     EXCHANGE_X_PARTS_BETWEEN_GENES = 4
 
-CROSSOVER_METHOD = (CrossoverType.EXCHANGE_X_PARTS, 4)
+
+CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
+
 
 class MutationMethod(Enum):
     # mutates x random bits of the whole chromosome (switching value 0 <-> 1)
@@ -86,34 +97,24 @@ class MutationMethod(Enum):
 # default mutation method
 MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
 
+
 class FitnessMethod(Enum):
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value
+    # return the opposite (negative) of absolute value of the difference between the result of the chromosome
+    # and the goal value
     DISTANCE_TO_VALUE = 1
 
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value,
-    # substracted by the number of genes
+    # return the opposite (negative) of absolute value of the difference between the result of the chromosome
+    # and the goal value, substracted by the number of genes
     DISTANCE_TO_VALUE_MINUS_NB_OP = 2
 
+
 FITNESS_METHOD = FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP
-
-def switch_type(type: Enum):
-    if(type == GeneType.OPERATOR):
-        return GeneType.NUMBER
-    if(type == GeneType.NUMBER):
-        return GeneType.OPERATOR
-    return GeneType.INVALID
-
-def get_gene_type(gene: str):
-    if(gene in lookup_types["operators"]):
-        return GeneType.OPERATOR
-    if(gene in lookup_types["numbers"]):
-        return GeneType.NUMBER
-    return GeneType.INVALID
 
 
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
-    example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1" as a result
+    example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1"
+    as a result
 
     Args:
         chromosome (str): a string of "0" and "1" that represents a possible sequence of operators and digits
@@ -122,15 +123,30 @@ def decode(chromosome: str) -> str:
         str: a translated string from the input chromosome in an human-readable format
     """
 
-    #initialisation
+    def switch_type(gene_type: Enum):
+        if gene_type == GeneType.OPERATOR:
+            return GeneType.NUMBER
+        if gene_type == GeneType.NUMBER:
+            return GeneType.OPERATOR
+        return GeneType.INVALID
+
+    def get_gene_type(gene: str):
+        if gene in lookup_types["operators"]:
+            return GeneType.OPERATOR
+        if gene in lookup_types["numbers"]:
+            return GeneType.NUMBER
+        return GeneType.INVALID
+
+    # initialisation
     genes = textwrap.wrap(chromosome, 4)
     result = ""
     expected_type = GeneType.NUMBER
 
     for gene in genes:
-        type = get_gene_type(gene)
+        gene_type = get_gene_type(gene)
         # ignore if gene is invalid, or not of type expected
-        if(len(gene) == 4 and gene in lookup_genes.keys() and type == expected_type):
+        if len(gene) == 4 and gene in lookup_genes.keys() and gene_type == expected_type:
+            # add gene value to result
             result += lookup_genes[gene]
             result += " "
             # update expected type
@@ -154,9 +170,10 @@ def evaluate(chromosome: str) -> float:
         float: the result of the sequence of digits and operators
     """
 
-    def number(x:str):
+    def number(x: str):
         assert is_number(x)
         return int(x)
+
     def is_number(x):
         return x.isdigit() and 0 <= int(x) < 10
 
@@ -167,10 +184,10 @@ def evaluate(chromosome: str) -> float:
         return is_op(x) or is_number(x)
 
     operations = {
-        '+' : lambda x,y : x+y,
-        '-' : lambda x,y : x-y,
-        '*' : lambda x,y : x*y,
-        '/' : lambda x,y : x/y
+        '+': lambda x, y: x + y,
+        '-': lambda x, y: x - y,
+        '*': lambda x, y: x * y,
+        '/': lambda x, y: x / y
     }
 
     op = None
@@ -254,7 +271,19 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
 
     """
 
-    def crossover_each_x_bit(chromosome_1, chromosome_2, n):
+    def crossover_each_x_bit(chromosome_1: str, chromosome_2: str, x: int):
+        """Performs the crossover on 2 chromosomes:
+            each x bit, exchange the value of the bit from chromomose 1 with the one from chromosome 2
+
+            Args:
+                chromosome_1 (str): the first parent chromosome as a string of "0" and "1"
+                chromosome_2 (str): the second parent chromosome as a string of "0" and "1"
+                x (int): step between exchange for value
+
+            Returns:
+                str: a list containing the childrens of the two parents as strings of "0" and "1"
+
+            """
         chromosome_1 = list(chromosome_1)
         chromosome_2 = list(chromosome_2)
         c_1 = chromosome_1
@@ -263,9 +292,9 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
             c_1 = chromosome_2
             c_2 = chromosome_1
 
-        step = n
-        if CROSSOVER_METHOD[0] == CrossoverType.EXCHANGE_EACH_X_GENE:
-            step = n * 4
+        step = x
+        if CROSSOVER_METHOD[0] == CrossoverMethod.EXCHANGE_EACH_X_GENE:
+            step = x * 4
 
         change = True
         for i in range(0, len(c_1), step):
@@ -279,7 +308,22 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
 
         return "".join(c_1)
 
-    def crossover_x_part(chromosome_1, chromosome_2, n, between_genes):
+    def crossover_x_part(chromosome_1: str, chromosome_2: str, x: int, between_genes: bool):
+        """Performs the crossover on 2 chromosomes:
+            # divide the chromosomes in x parts, and exchange the value of the 2 chromosome every 2 parts
+
+
+            Args:
+                chromosome_1 (str): the first parent chromosome as a string of "0" and "1"
+                chromosome_2 (str): the second parent chromosome as a string of "0" and "1"
+                x (int): step between exchange of value
+                between_genes (bool): indicate if the division should be done between gene to keep them intact (True, to do it between genes, false otherwise)
+
+
+            Returns:
+                str: a list containing the childrens of the two parents as strings of "0" and "1"
+
+            """
         chromosome_1 = list(chromosome_1)
         chromosome_2 = list(chromosome_2)
         c_1 = chromosome_1
@@ -287,12 +331,12 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         if len(chromosome_2) < len(chromosome_1):
             c_1 = chromosome_2
             c_2 = chromosome_1
-        length_part = len(c_1) // n
+        length_part = len(c_1) // x
         if between_genes:
             nb_gene = len(c_1) // 4
-            length_part = (nb_gene // n) * 4
+            length_part = (nb_gene // x) * 4
         change = True
-        for i in range(n):
+        for i in range(x):
             print(f"iter {i}")
             if change:
                 start = i * length_part
@@ -300,7 +344,7 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
                 print(f"start: {start}")
                 print(f"stop: {end}")
 
-                if i == n - 1:
+                if i == x - 1:
                     end = len(c_1)
                 c_1[start:end] = c_2[start:end]
             change = not change
@@ -308,14 +352,15 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         return "".join(c_1)
 
     match CROSSOVER_METHOD[0]:
-        case CrossoverType.EXCHANGE_EACH_X_BIT:
-            return crossover_each_x_bit(chromosome_1, chromosome_2,CROSSOVER_METHOD[1])
-        case CrossoverType.EXCHANGE_EACH_X_GENE:
+        case CrossoverMethod.EXCHANGE_EACH_X_BIT:
+            return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1])
+        case CrossoverMethod.EXCHANGE_EACH_X_GENE:
             return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1] * 4)
-        case CrossoverType.EXCHANGE_X_PARTS:
+        case CrossoverMethod.EXCHANGE_X_PARTS:
             return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], False)
-        case CrossoverType.EXCHANGE_X_PARTS_BETWEEN_GENES:
+        case CrossoverMethod.EXCHANGE_X_PARTS_BETWEEN_GENES:
             return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], True)
+
 
 def population_crossover(population: [str]) -> [str]:
     """Performs the crossover over the entire population (or a subpart of it)
@@ -471,7 +516,8 @@ def selection(population: [str], scores: [float]) -> [str]:
 ***********************************************************************************************************
 Initialisation de la population
     Vous pouvez utiliser la fonction suivante pour générer la population initiale. 
-    Comme précédemment, n'hésitez pas à modifier les paramètres (surtout la taille de la population et le nombre de gènes!)
+    Comme précédemment, n'hésitez pas à modifier les paramètres (surtout la taille de la population et le nombre
+    de gènes!)
 ***********************************************************************************************************
 """
 
@@ -495,7 +541,7 @@ def generate(nb_individuals: int, nb_genes: int) -> [str]:
     """
 
     try:
-        population = random.sample(range(2 ** (4 * (nb_genes))), nb_individuals)
+        population = random.sample(range(2 ** (4 * nb_genes)), nb_individuals)
         population = [pad(bin(c)[2:], (4 * nb_genes)) for c in population]
     except OverflowError:
         pop_1 = generate(nb_individuals, nb_genes // 2)
@@ -508,7 +554,8 @@ def generate(nb_individuals: int, nb_genes: int) -> [str]:
 """
 ***********************************************************************************************************
 L'algorithme génétique
-    Nous pouvons maintenant implémenter les étapes principales de l'algorithme génétique (n'hésitez pas à essayer différentes version).
+    Nous pouvons maintenant implémenter les étapes principales de l'algorithme génétique (n'hésitez pas à essayer
+    différentes version).
 ***********************************************************************************************************
 """
 
@@ -523,7 +570,8 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         limit_sec (float): maximum number of seconds allowed, must return a solution before this limit!
 
     Returns:
-        [str]: the last population, sorted by fitness value, descending: best fitness (highest) is 1st, i.e., the best solution
+        [str]: the last population, sorted by fitness value, descending: best fitness (highest) is 1st, i.e., the
+        best solution
     """
 
     # initialization
@@ -543,12 +591,11 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
 
         # over ?
         # TODO : implement the condition to stop the genetic algorithm
-        best_individual=None
+        best_individual = None
         cond = False
 
     # TODO: sort population DESC (see docstring) before returning
     return population
-
 
 
 if __name__ == "__main__":
@@ -557,23 +604,25 @@ if __name__ == "__main__":
     nb_genes = 5
     target = 4.5
     sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=10)
-    solution=sorted_population[0]
+    solution = sorted_population[0]
 
     # Nous pouvons maintenant regarder le meilleur individu:
     scores = [fitness(chromosome, target) for chromosome in sorted_population]
     print(f"***TARGET***: {target}")
-    f=fitness(chromosome=solution, target=target)
-    d=decode(chromosome=solution)
-    e=evaluate(chromosome=solution)
+    f = fitness(chromosome=solution, target=target)
+    d = decode(chromosome=solution)
+    e = evaluate(chromosome=solution)
     print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}")
 
     # Ou l'intégralité de la population:
     for c in sorted_population:
-        f=fitness(chromosome=c, target=target)
-        d=decode(chromosome=c)
-        e=evaluate(chromosome=c)
+        f = fitness(chromosome=c, target=target)
+        d = decode(chromosome=c)
+        e = evaluate(chromosome=c)
         print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
 
     # Tests et optimisation des hyper-paramètres
-    # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des "bonnes" valeurs!
-    # Testez différentes valeurs des paramètres, et créez un plot qui affiche un fitness (p. ex. du meilleur, moyenne) en fonction du nombre d'itérations.
+    # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des
+    # "bonnes" valeurs!
+    # Testez différentes valeurs des paramètres, et créez un plot qui affiche un fitness (p. ex. du meilleur, moyenne)
+    # en fonction du nombre d'itérations.
