@@ -13,6 +13,7 @@ Commencez par implémenter les fonctions `decode` et `evaluate`, en reprenant le
 ***********************************************************************************************************
 """
 
+# lookup dict to get the values of the genes
 lookup_genes = {
     "0000": "0",
     "0001": "1",
@@ -30,6 +31,7 @@ lookup_genes = {
     "1101": "/",
 }
 
+# lookup dict to get the type of the genes
 lookup_types = {
     "operators":
         [
@@ -61,9 +63,17 @@ class GeneType(Enum):
 
 
 class CrossoverMethod(Enum):
+    # each x bit, exchange the value of the bit from chromomose 1 with the one from chromosome 2
     EXCHANGE_EACH_X_BIT = 1
+
+    # each x gene, exchange the value of the gene from chromomose 1 with the one from chromosome 2
     EXCHANGE_EACH_X_GENE = 2
+
+    # divide the chromosomes in x parts, and exchange the value of the 2 chromosome every 2 parts
     EXCHANGE_X_PARTS = 3
+
+    # divide the chromosome in x parts, but between the genes to keep them intact, and exchange the value of the
+    # 2 chromosome every 2 parts
     EXCHANGE_X_PARTS_BETWEEN_GENES = 4
 
 
@@ -136,6 +146,7 @@ def decode(chromosome: str) -> str:
         gene_type = get_gene_type(gene)
         # ignore if gene is invalid, or not of type expected
         if len(gene) == 4 and gene in lookup_genes.keys() and gene_type == expected_type:
+            # add gene value to result
             result += lookup_genes[gene]
             result += " "
             # update expected type
@@ -260,7 +271,19 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
 
     """
 
-    def crossover_each_x_bit(chromosome_1, chromosome_2, n):
+    def crossover_each_x_bit(chromosome_1: str, chromosome_2: str, x: int):
+        """Performs the crossover on 2 chromosomes:
+            each x bit, exchange the value of the bit from chromomose 1 with the one from chromosome 2
+
+            Args:
+                chromosome_1 (str): the first parent chromosome as a string of "0" and "1"
+                chromosome_2 (str): the second parent chromosome as a string of "0" and "1"
+                x (int): step between exchange for value
+
+            Returns:
+                str: a list containing the childrens of the two parents as strings of "0" and "1"
+
+            """
         chromosome_1 = list(chromosome_1)
         chromosome_2 = list(chromosome_2)
         c_1 = chromosome_1
@@ -269,9 +292,9 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
             c_1 = chromosome_2
             c_2 = chromosome_1
 
-        step = n
+        step = x
         if CROSSOVER_METHOD[0] == CrossoverMethod.EXCHANGE_EACH_X_GENE:
-            step = n * 4
+            step = x * 4
 
         change = True
         for i in range(0, len(c_1), step):
@@ -285,7 +308,22 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
 
         return "".join(c_1)
 
-    def crossover_x_part(chromosome_1, chromosome_2, n, between_genes):
+    def crossover_x_part(chromosome_1: str, chromosome_2: str, x: int, between_genes: bool):
+        """Performs the crossover on 2 chromosomes:
+            # divide the chromosomes in x parts, and exchange the value of the 2 chromosome every 2 parts
+
+
+            Args:
+                chromosome_1 (str): the first parent chromosome as a string of "0" and "1"
+                chromosome_2 (str): the second parent chromosome as a string of "0" and "1"
+                x (int): step between exchange of value
+                between_genes (bool): indicate if the division should be done between gene to keep them intact (True, to do it between genes, false otherwise)
+
+
+            Returns:
+                str: a list containing the childrens of the two parents as strings of "0" and "1"
+
+            """
         chromosome_1 = list(chromosome_1)
         chromosome_2 = list(chromosome_2)
         c_1 = chromosome_1
@@ -293,12 +331,12 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         if len(chromosome_2) < len(chromosome_1):
             c_1 = chromosome_2
             c_2 = chromosome_1
-        length_part = len(c_1) // n
+        length_part = len(c_1) // x
         if between_genes:
             nb_gene = len(c_1) // 4
-            length_part = (nb_gene // n) * 4
+            length_part = (nb_gene // x) * 4
         change = True
-        for i in range(n):
+        for i in range(x):
             print(f"iter {i}")
             if change:
                 start = i * length_part
@@ -306,7 +344,7 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
                 print(f"start: {start}")
                 print(f"stop: {end}")
 
-                if i == n - 1:
+                if i == x - 1:
                     end = len(c_1)
                 c_1[start:end] = c_2[start:end]
             change = not change
