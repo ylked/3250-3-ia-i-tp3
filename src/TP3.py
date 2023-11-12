@@ -60,14 +60,14 @@ class GeneType(Enum):
     INVALID = 3
 
 
-class CrossoverType(Enum):
+class CrossoverMethod(Enum):
     EXCHANGE_EACH_X_BIT = 1
     EXCHANGE_EACH_X_GENE = 2
     EXCHANGE_X_PARTS = 3
     EXCHANGE_X_PARTS_BETWEEN_GENES = 4
 
 
-CROSSOVER_METHOD = (CrossoverType.EXCHANGE_X_PARTS, 4)
+CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
 
 
 class MutationMethod(Enum):
@@ -272,7 +272,7 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
             c_2 = chromosome_1
 
         step = n
-        if CROSSOVER_METHOD[0] == CrossoverType.EXCHANGE_EACH_X_GENE:
+        if CROSSOVER_METHOD[0] == CrossoverMethod.EXCHANGE_EACH_X_GENE:
             step = n * 4
 
         change = True
@@ -316,13 +316,13 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         return "".join(c_1)
 
     match CROSSOVER_METHOD[0]:
-        case CrossoverType.EXCHANGE_EACH_X_BIT:
+        case CrossoverMethod.EXCHANGE_EACH_X_BIT:
             return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1])
-        case CrossoverType.EXCHANGE_EACH_X_GENE:
+        case CrossoverMethod.EXCHANGE_EACH_X_GENE:
             return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1] * 4)
-        case CrossoverType.EXCHANGE_X_PARTS:
+        case CrossoverMethod.EXCHANGE_X_PARTS:
             return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], False)
-        case CrossoverType.EXCHANGE_X_PARTS_BETWEEN_GENES:
+        case CrossoverMethod.EXCHANGE_X_PARTS_BETWEEN_GENES:
             return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], True)
 
 
