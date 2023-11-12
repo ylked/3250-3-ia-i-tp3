@@ -87,12 +87,14 @@ class MutationMethod(Enum):
 MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
 
 class FitnessMethod(Enum):
-    # return the absolute value of the difference between the result of the chromosome and the goal value
+    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value
     DISTANCE_TO_VALUE = 1
 
-    # return the absolute value of the difference between the result of the chromosome and the goal value,
+    # return the opposite (negative) of absolute value of the difference between the result of the chromosome and the goal value,
     # substracted by the number of genes
     DISTANCE_TO_VALUE_MINUS_NB_OP = 2
+
+FITNESS_METHOD = FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP
 
 def switch_type(type: Enum):
     if(type == GeneType.OPERATOR):
