@@ -19,7 +19,7 @@ links-as-notes: true
 mainfont: Latin Modern Roman
 sansfont: Latin Modern Sans
 
-documentclass: srcreport
+documentclass: scrreport
 
 lofTitle: Liste des figures
 lolTitle: Liste des codes
