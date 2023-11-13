@@ -16,6 +16,11 @@ urlcolor: MidnightBlue
 numbersections: true
 links-as-notes: true
 
+mainfont: Latin Modern Roman
+sansfont: Latin Modern Sans
+
+documentclass: srcreport
+
 lofTitle: Liste des figures
 lolTitle: Liste des codes
 listingTitle: Code
@@ -23,7 +28,7 @@ lstPrefix:
   - code
   - codes
 
-toc: false
+toc: true
 toc-depth: 4
 header-includes: |
     \usepackage{fancyhdr}
@@ -38,3 +43,16 @@ header-includes: |
 
 ---
 
+# Introduction
+
+## blabla
+
+bla bla bla
+
+# Analyse
+
+une analyse
+
+# Conclusion
+
+ceci est une conclusion
