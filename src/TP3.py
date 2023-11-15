@@ -97,6 +97,25 @@ class MutationMethod(Enum):
 # default mutation method
 MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
 
+class SelectionMethod(Enum):
+    # random uniform selection
+    UNIFORM = 1
+
+    # keep n best individuals
+    RANK = 2
+
+    # randomly selects pairs of individuals and keep the best of the two
+    TOURNAMENT = 3
+
+    # roulette wheel selection
+    ROULETTE = 4
+
+
+# selection method tuple
+# 1. first element is the method
+# 2. second element is elitist mode (true/false) to the keep best individual
+SELECTION_METHOD = (SelectionMethod.RANK, True)
+
 
 class FitnessMethod(Enum):
     # return the opposite (negative) of absolute value of the difference between the result of the chromosome
