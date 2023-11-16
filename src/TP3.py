@@ -277,8 +277,99 @@ Opérateurs de croisement, mutation et sélection
 ***********************************************************************************************************
 """
 
-
 def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
+
+    def exchange_x_parts():
+        s1, s2 = [], []
+        size = len(chromosome_1)
+        assert size % x == 0
+
+        step = size // x
+
+        for i in range(x):
+            start, end = i * step, (i + 1) * step
+
+            c1, c2 = (list(chromosome_1), list(chromosome_2)) \
+                if i % 2 == 0 else \
+                (list(chromosome_2), list(chromosome_1))
+
+            s1.extend(c1[start:end])
+            s2.extend(c2[start:end])
+
+        assert len(s1) == size
+        assert len(s2) == size
+        return "".join(s1), "".join(s2)
+
+    def exchange_each_x_genes():
+        g1, g2 = [], []
+        size = len(chromosome_1)
+
+        assert size / 4 % x == 0
+
+        genes1 = textwrap.wrap(chromosome_1, 4)
+        genes2 = textwrap.wrap(chromosome_2, 4)
+
+        n = len(genes1)
+        assert n % x == 0
+        step = x
+
+        change = False
+        for i in range(n // x):
+            start, end = i * step, (i + 1) * step
+            gene1, gene2 = (genes1[start:end], genes2[start:end]) if change else (genes2[start:end], genes1[start:end])
+
+            g1.extend(gene1)
+            g2.extend(gene2)
+
+            change = not change
+
+        assert len(g1) == len(chromosome_1)
+        assert len(g2) == len(chromosome_2)
+        return "".join(g1), "".join(g2)
+
+    def exchange_each_x_bit():
+        s1, s2 = [], []
+
+        size = len(chromosome_1)
+
+        change = True
+        for i in range(size // x):
+            start, end = i * x, (i + 1) * x
+
+            c1, c2 = (chromosome_1, chromosome_2) if change else (chromosome_2, chromosome_1)
+
+            s1.extend(c1[start:end])
+            s2.extend(c2[start:end])
+
+            change = not change
+
+        assert len(s1) == len(chromosome_1)
+        assert len(s2) == len(chromosome_2)
+
+        return "".join(s1), "".join(s2)
+
+    def exchange_x_parts_between_genes():
+        pass
+
+    method, x = CROSSOVER_METHOD
+
+    # maybe to change...
+    assert len(chromosome_1) == len(chromosome_2)
+
+    match method:
+        case CrossoverMethod.EXCHANGE_X_PARTS:
+            return exchange_x_parts()
+
+        case CrossoverMethod.EXCHANGE_EACH_X_GENE:
+            return exchange_each_x_genes()
+
+        case CrossoverMethod.EXCHANGE_EACH_X_BIT:
+            return exchange_each_x_bit()
+
+        case CrossoverMethod.EXCHANGE_X_PARTS_BETWEEN_GENES:
+            exchange_x_parts_between_genes()
+
+def crossover_(chromosome_1: str, chromosome_2: str) -> [str]:
     """Performs the crossover on 2 chromosomes
 
     Args:
