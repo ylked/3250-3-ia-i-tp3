@@ -97,6 +97,25 @@ class MutationMethod(Enum):
 # default mutation method
 MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
 
+class SelectionMethod(Enum):
+    # random uniform selection
+    UNIFORM = 1
+
+    # keep n best individuals
+    RANK = 2
+
+    # randomly selects pairs of individuals and keep the best of the two
+    TOURNAMENT = 3
+
+    # roulette wheel selection
+    ROULETTE = 4
+
+
+# selection method tuple
+# 1. first element is the method
+# 2. second element is elitist mode (true/false) to the keep best individual
+SELECTION_METHOD = (SelectionMethod.RANK, True)
+
 
 class FitnessMethod(Enum):
     # return the opposite (negative) of absolute value of the difference between the result of the chromosome
@@ -508,9 +527,78 @@ def selection(population: [str], scores: [float]) -> [str]:
         [str]: the chromosomes that have been selected to create the next generation
     """
 
-    # TODO : implement the function
-    return population
+    def uniform_selection():
+        next_gen: list = population
 
+        random.shuffle(next_gen)
+        next_gen = next_gen[:len(population) // 2]
+
+        if elitist:
+            best = sorted_population[0]
+            print(best)
+            if best not in next_gen:
+                next_gen[0] = best
+
+        return next_gen
+
+    def rank_selection():
+        return sorted_population[:len(population) // 2]
+
+    def tournament_selection():
+        next_gen = []
+        lookup_scores = {}
+        for i in range(len(population)):
+            lookup_scores[population[i]] = scores[i]
+
+        pairs = []
+        pool:list = population
+
+        while len(pool) >= 2:
+            c1 = random.choice(pool)
+            pool.remove(c1)
+
+            c2 = random.choice(pool)
+            pool.remove(c2)
+
+            pairs.append((c1, c2))
+
+        for c1, c2 in pairs:
+            score1, score2 = lookup_scores[c1], lookup_scores[c2]
+            next_gen.append(c1 if score1 > score2 else c2)
+
+        return next_gen
+
+    def roulette_selection():
+        s = set()
+
+        if elitist:
+            s.add(sorted_population[0])
+
+        while len(s) < len(population) // 2:
+            # we need to add an offset to the scores because they are negatives and
+            # the random.choices does not like it...
+            s.add(random.choices(population, weights=[x - min(scores) + 1 for x in scores])[0])
+        return list(s)
+
+    method, elitist = SELECTION_METHOD
+
+    sorted_population = [p for _, p in sorted(zip(scores, population), reverse=True)]
+
+    match method:
+        case SelectionMethod.UNIFORM:
+            return uniform_selection()
+
+        case SelectionMethod.RANK:
+            return rank_selection()
+
+        case SelectionMethod.TOURNAMENT:
+            return tournament_selection()
+
+        case SelectionMethod.ROULETTE:
+            return roulette_selection()
+
+        case _:
+            raise Exception('Chosen selection method has not been implemented yet')
 
 """
 ***********************************************************************************************************
