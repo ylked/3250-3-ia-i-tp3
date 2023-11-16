@@ -2,10 +2,12 @@
 TP3 - Le compte est bon
 Nous souhaitons réaliser une IA basée sur les algorithmes génétiques permettant de résoudre le problème du compte est bon.
 """
-
+import math
 import random
 from enum import Enum
 import textwrap
+
+from datetime import datetime as dt
 
 """
 ***********************************************************************************************************
@@ -765,6 +767,8 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
     population = generate(nb_individuals, nb_genes)
     cond = True
 
+    start = dt.now()
+
     while cond:  # TODO: use limit_sec to stop the algorithm after a certain time
         # evaluation
         fitness_values = [fitness(chromosome, target) for chromosome in population]
@@ -776,20 +780,29 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         population = [mutation(chromosome) for chromosome in population]
 
         # over ?
-        # TODO : implement the condition to stop the genetic algorithm
-        best_individual = None
-        cond = False
+        if (dt.now() - start).total_seconds() >= limit_sec:
+            cond = False
+        #best = sorted(population, key=lambda x: fitness(x, target))[0]
 
     # TODO: sort population DESC (see docstring) before returning
-    return population
+
+    _p = sorted(population, key=lambda x: fitness(x, target), reverse=True)
+
+    return _p
 
 
 if __name__ == "__main__":
 
-    nb_individuals = 20
-    nb_genes = 5
-    target = 4.5
+    nb_individuals = 50
+    nb_genes = 200
+    target = math.pi
+
+    MUTATION_METHOD = (MutationMethod.INVERT_ONE_BIT_OF_X_GENES, nb_genes//100)
+    SELECTION_METHOD = (SelectionMethod.TOURNAMENT, True)
+    CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, nb_genes//10)
+
     sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=10)
+    print(sorted_population)
     solution = sorted_population[0]
 
     # Nous pouvons maintenant regarder le meilleur individu:
