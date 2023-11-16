@@ -206,7 +206,7 @@ def evaluate(chromosome: str) -> float:
         '+': lambda x, y: x + y,
         '-': lambda x, y: x - y,
         '*': lambda x, y: x * y,
-        '/': lambda x, y: x / y
+        '/': lambda x, y: x / y if y != 0 else 0
     }
 
     op = None
