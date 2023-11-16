@@ -482,8 +482,18 @@ def population_crossover(population: [str]) -> [str]:
         [str]: a list of all the chromosomes of the children population as strings of "0" and "1"
     """
 
-    # TODO : implement the function
-    return population
+    output = []
+    pop = population
+    random.shuffle(pop)
+    s = len(population)
+
+    for i in range(len(pop)):
+        c1 = pop[i % s]
+        c2 = pop[(i+1) % s]
+        output.extend(crossover(c1, c2))
+
+    assert len(output) == 2*len(population)
+    return output
 
 
 def mutation(chromosome: str) -> str:
