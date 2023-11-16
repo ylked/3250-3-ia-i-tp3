@@ -559,13 +559,11 @@ def mutation(chromosome: str) -> str:
         genes = textwrap.wrap(_chromosome, 4)
 
         genes_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
-        print(genes_indices, x)
 
         # mutate all the bits in the selected genes
         for i in genes_indices:
             # split gene string as list
             gene_as_list = list(genes[i])
-            print(gene_as_list)
 
             # mutate all the bits
             for j in range(4):
@@ -636,7 +634,6 @@ def selection(population: [str], scores: [float]) -> [str]:
 
         if elitist:
             best = sorted_population[0]
-            print(best)
             if best not in next_gen:
                 next_gen[0] = best
 
