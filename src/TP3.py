@@ -2,10 +2,12 @@
 TP3 - Le compte est bon
 Nous souhaitons réaliser une IA basée sur les algorithmes génétiques permettant de résoudre le problème du compte est bon.
 """
-
+import math
 import random
 from enum import Enum
 import textwrap
+
+from datetime import datetime as dt
 
 """
 ***********************************************************************************************************
@@ -206,7 +208,7 @@ def evaluate(chromosome: str) -> float:
         '+': lambda x, y: x + y,
         '-': lambda x, y: x - y,
         '*': lambda x, y: x * y,
-        '/': lambda x, y: x / y
+        '/': lambda x, y: x / y if y != 0 else 0
     }
 
     op = None
@@ -277,109 +279,97 @@ Opérateurs de croisement, mutation et sélection
 ***********************************************************************************************************
 """
 
-
 def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
-    """Performs the crossover on 2 chromosomes
 
-    Args:
-        chromosome_1 (str): the first parent chromosome as a string of "0" and "1"
-        chromosome_2 (str): the second parent chromosome as a string of "0" and "1"
+    def exchange_x_parts():
+        s1, s2 = [], []
+        size = len(chromosome_1)
+        assert size % x == 0
 
-    Returns:
-        str: a list containing the childrens of the two parents as strings of "0" and "1"
+        step = size // x
 
-    """
-
-    def crossover_each_x_bit(chromosome_1: str, chromosome_2: str, x: int):
-        """Performs the crossover on 2 chromosomes:
-            each x bit, exchange the value of the bit from chromomose 1 with the one from chromosome 2
-
-            Args:
-                chromosome_1 (str): the first parent chromosome as a string of "0" and "1"
-                chromosome_2 (str): the second parent chromosome as a string of "0" and "1"
-                x (int): step between exchange for value
-
-            Returns:
-                str: a list containing the childrens of the two parents as strings of "0" and "1"
-
-            """
-        chromosome_1 = list(chromosome_1)
-        chromosome_2 = list(chromosome_2)
-        c_1 = chromosome_1
-        c_2 = chromosome_2
-        if len(chromosome_2) < len(chromosome_1):
-            c_1 = chromosome_2
-            c_2 = chromosome_1
-
-        step = x
-        if CROSSOVER_METHOD[0] == CrossoverMethod.EXCHANGE_EACH_X_GENE:
-            step = x * 4
-
-        change = True
-        for i in range(0, len(c_1), step):
-            start = i - step
-            end = i
-            if change:
-                c_1[start:end] = c_2[start:end]
-            elif i + step >= len(c_1):
-                c_1[end + 1:] = c_2[end + 1:len(c_1)]
-            change = not change
-
-        return "".join(c_1)
-
-    def crossover_x_part(chromosome_1: str, chromosome_2: str, x: int, between_genes: bool):
-        """Performs the crossover on 2 chromosomes:
-            # divide the chromosomes in x parts, and exchange the value of the 2 chromosome every 2 parts
-
-
-            Args:
-                chromosome_1 (str): the first parent chromosome as a string of "0" and "1"
-                chromosome_2 (str): the second parent chromosome as a string of "0" and "1"
-                x (int): step between exchange of value
-                between_genes (bool): indicate if the division should be done between gene to keep them intact (True, to do it between genes, false otherwise)
-
-
-            Returns:
-                str: a list containing the childrens of the two parents as strings of "0" and "1"
-
-            """
-        chromosome_1 = list(chromosome_1)
-        chromosome_2 = list(chromosome_2)
-        c_1 = chromosome_1
-        c_2 = chromosome_2
-        if len(chromosome_2) < len(chromosome_1):
-            c_1 = chromosome_2
-            c_2 = chromosome_1
-        length_part = len(c_1) // x
-        if between_genes:
-            nb_gene = len(c_1) // 4
-            length_part = (nb_gene // x) * 4
-        change = True
         for i in range(x):
-            print(f"iter {i}")
-            if change:
-                start = i * length_part
-                end = start + length_part
-                print(f"start: {start}")
-                print(f"stop: {end}")
+            start, end = i * step, (i + 1) * step
 
-                if i == x - 1:
-                    end = len(c_1)
-                c_1[start:end] = c_2[start:end]
+            c1, c2 = (list(chromosome_1), list(chromosome_2)) \
+                if i % 2 == 0 else \
+                (list(chromosome_2), list(chromosome_1))
+
+            s1.extend(c1[start:end])
+            s2.extend(c2[start:end])
+
+        assert len(s1) == size
+        assert len(s2) == size
+        return "".join(s1), "".join(s2)
+
+    def exchange_each_x_genes():
+        g1, g2 = [], []
+        size = len(chromosome_1)
+
+        assert size / 4 % x == 0
+
+        genes1 = textwrap.wrap(chromosome_1, 4)
+        genes2 = textwrap.wrap(chromosome_2, 4)
+
+        n = len(genes1)
+        assert n % x == 0
+        step = x
+
+        change = False
+        for i in range(n // x):
+            start, end = i * step, (i + 1) * step
+            gene1, gene2 = (genes1[start:end], genes2[start:end]) if change else (genes2[start:end], genes1[start:end])
+
+            g1.extend(gene1)
+            g2.extend(gene2)
+
             change = not change
 
-        return "".join(c_1)
+        assert len(g1) == len(chromosome_1)
+        assert len(g2) == len(chromosome_2)
+        return "".join(g1), "".join(g2)
 
-    match CROSSOVER_METHOD[0]:
-        case CrossoverMethod.EXCHANGE_EACH_X_BIT:
-            return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1])
-        case CrossoverMethod.EXCHANGE_EACH_X_GENE:
-            return crossover_each_x_bit(chromosome_1, chromosome_2, CROSSOVER_METHOD[1] * 4)
+    def exchange_each_x_bit():
+        s1, s2 = [], []
+
+        size = len(chromosome_1)
+
+        change = True
+        for i in range(size // x):
+            start, end = i * x, (i + 1) * x
+
+            c1, c2 = (chromosome_1, chromosome_2) if change else (chromosome_2, chromosome_1)
+
+            s1.extend(c1[start:end])
+            s2.extend(c2[start:end])
+
+            change = not change
+
+        assert len(s1) == len(chromosome_1)
+        assert len(s2) == len(chromosome_2)
+
+        return "".join(s1), "".join(s2)
+
+    def exchange_x_parts_between_genes():
+        pass
+
+    method, x = CROSSOVER_METHOD
+
+    # maybe to change...
+    assert len(chromosome_1) == len(chromosome_2)
+
+    match method:
         case CrossoverMethod.EXCHANGE_X_PARTS:
-            return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], False)
-        case CrossoverMethod.EXCHANGE_X_PARTS_BETWEEN_GENES:
-            return crossover_x_part(chromosome_1, chromosome_2, CROSSOVER_METHOD[1], True)
+            return exchange_x_parts()
 
+        case CrossoverMethod.EXCHANGE_EACH_X_GENE:
+            return exchange_each_x_genes()
+
+        case CrossoverMethod.EXCHANGE_EACH_X_BIT:
+            return exchange_each_x_bit()
+
+        case CrossoverMethod.EXCHANGE_X_PARTS_BETWEEN_GENES:
+            exchange_x_parts_between_genes()
 
 def population_crossover(population: [str]) -> [str]:
     """Performs the crossover over the entire population (or a subpart of it)
@@ -391,8 +381,18 @@ def population_crossover(population: [str]) -> [str]:
         [str]: a list of all the chromosomes of the children population as strings of "0" and "1"
     """
 
-    # TODO : implement the function
-    return population
+    output = []
+    pop = population
+    random.shuffle(pop)
+    s = len(population)
+
+    for i in range(len(pop)):
+        c1 = pop[i % s]
+        c2 = pop[(i+1) % s]
+        output.extend(crossover(c1, c2))
+
+    assert len(output) == 2*len(population)
+    return output
 
 
 def mutation(chromosome: str) -> str:
@@ -458,13 +458,11 @@ def mutation(chromosome: str) -> str:
         genes = textwrap.wrap(_chromosome, 4)
 
         genes_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
-        print(genes_indices, x)
 
         # mutate all the bits in the selected genes
         for i in genes_indices:
             # split gene string as list
             gene_as_list = list(genes[i])
-            print(gene_as_list)
 
             # mutate all the bits
             for j in range(4):
@@ -535,7 +533,6 @@ def selection(population: [str], scores: [float]) -> [str]:
 
         if elitist:
             best = sorted_population[0]
-            print(best)
             if best not in next_gen:
                 next_gen[0] = best
 
@@ -667,6 +664,8 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
     population = generate(nb_individuals, nb_genes)
     cond = True
 
+    start = dt.now()
+
     while cond:  # TODO: use limit_sec to stop the algorithm after a certain time
         # evaluation
         fitness_values = [fitness(chromosome, target) for chromosome in population]
@@ -678,20 +677,29 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         population = [mutation(chromosome) for chromosome in population]
 
         # over ?
-        # TODO : implement the condition to stop the genetic algorithm
-        best_individual = None
-        cond = False
+        if (dt.now() - start).total_seconds() >= limit_sec:
+            cond = False
+        #best = sorted(population, key=lambda x: fitness(x, target))[0]
 
     # TODO: sort population DESC (see docstring) before returning
-    return population
+
+    _p = sorted(population, key=lambda x: fitness(x, target), reverse=True)
+
+    return _p
 
 
 if __name__ == "__main__":
 
-    nb_individuals = 20
-    nb_genes = 5
-    target = 4.5
+    nb_individuals = 50
+    nb_genes = 200
+    target = math.pi
+
+    MUTATION_METHOD = (MutationMethod.INVERT_ONE_BIT_OF_X_GENES, nb_genes//100)
+    SELECTION_METHOD = (SelectionMethod.TOURNAMENT, True)
+    CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, nb_genes//10)
+
     sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=10)
+    print(sorted_population)
     solution = sorted_population[0]
 
     # Nous pouvons maintenant regarder le meilleur individu:
