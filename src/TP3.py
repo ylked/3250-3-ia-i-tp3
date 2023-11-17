@@ -165,6 +165,11 @@ def decode(chromosome: str) -> str:
 
     for gene in genes:
         gene_type = get_gene_type(gene)
+        # ignore division by zero
+        if len(result) > 2 and result[-2] == "/" and lookup_genes[gene] == "0":
+            result = result[:-2]
+            expected_type = switch_type(expected_type)
+            continue
         # ignore if gene is invalid, or not of type expected
         if len(gene) == 4 and gene in lookup_genes.keys() and gene_type == expected_type:
             # add gene value to result
