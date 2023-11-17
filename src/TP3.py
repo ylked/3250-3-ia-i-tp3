@@ -118,20 +118,6 @@ class SelectionMethod(Enum):
 # 2. second element is elitist mode (true/false) to the keep best individual
 SELECTION_METHOD = (SelectionMethod.RANK, True)
 
-
-class FitnessMethod(Enum):
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome
-    # and the goal value
-    DISTANCE_TO_VALUE = 1
-
-    # return the opposite (negative) of absolute value of the difference between the result of the chromosome
-    # and the goal value, substracted by the number of genes
-    DISTANCE_TO_VALUE_MINUS_NB_OP = 2
-
-
-FITNESS_METHOD = FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP
-
-
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
     example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1"
@@ -257,17 +243,7 @@ def fitness(chromosome: str, target: float) -> float:
         float: The fitness value of the chromosome
     """
 
-    def get_distance_to_value(chromosome: str, target: float):
-        return - abs(target - evaluate(chromosome))
-
-    def get_nb_op(chromosome: str):
-        return len(chromosome) // 4
-
-    match FITNESS_METHOD:
-        case FitnessMethod.DISTANCE_TO_VALUE:
-            return get_distance_to_value(chromosome, target)
-        case FitnessMethod.DISTANCE_TO_VALUE_MINUS_NB_OP:
-            return get_distance_to_value(chromosome, target) - get_nb_op(chromosome)
+    return - abs(target - evaluate(chromosome))
 
 
 """
