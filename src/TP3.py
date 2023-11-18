@@ -135,12 +135,25 @@ def decode(chromosome: str) -> str:
         str: a translated string from the input chromosome in an human-readable format
     """
 
-    def switch_type(gene_type: Enum):
-        if gene_type == GeneType.OPERATOR:
-            return GeneType.NUMBER
-        if gene_type == GeneType.NUMBER:
-            return GeneType.OPERATOR
-        return GeneType.INVALID
+    def switch_type(gene_type: GeneType) -> GeneType:
+        """
+        Switch the type of the given gene type enumerator
+        Args:
+            gene_type (GeneType): The gene type enumerator
+
+        Returns:
+            GeneType: NUMBER if gene is OPERATOR and vice versa. If invalid, stays invalid.
+        """
+
+        match gene_type:
+            case GeneType.OPERATOR:
+                return GeneType.NUMBER
+
+            case GeneType.NUMBER:
+                return GeneType.OPERATOR
+
+            case _:
+                return GeneType.INVALID
 
     def get_gene_type(gene: str):
         if gene in lookup_types["operators"]:
