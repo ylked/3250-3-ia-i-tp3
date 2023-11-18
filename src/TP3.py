@@ -97,7 +97,12 @@ class MutationMethod(Enum):
 
 
 # default mutation method
-MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 1)
+MUTATION_METHOD = {
+    'method': MutationMethod.INVERT_ALL_BITS_OF_X_GENES,
+    'x': 1,
+    'incidence_percent': 2
+}
+
 
 class SelectionMethod(Enum):
     # random uniform selection
@@ -399,9 +404,12 @@ def mutation(chromosome: str) -> str:
             s.add(random.randint(0, max_value))
         return tuple(s)
 
-    def invert_one_bit_of_x_genes(_chromosome: str, x: int):
+    def chromosome_mutates():
+        return random.random() * 100 < incidence
+
+    def invert_one_bit_of_x_genes():
         # split chromosome by genes
-        genes = textwrap.wrap(_chromosome, 4)
+        genes = textwrap.wrap(chromosome, 4)
 
         # randomly select the genes to be mutated
         genes_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
@@ -425,11 +433,11 @@ def mutation(chromosome: str) -> str:
 
         return "".join(genes)
 
-    def invert_x_bits(_chromosome: str, x: int):
-        chromosome_as_list = list(_chromosome)
+    def invert_x_bits():
+        chromosome_as_list = list(chromosome)
 
         # randomly select x distinct bits to be mutated
-        bit_indices = get_x_distinct_random_numbers(len(_chromosome) - 1, x)
+        bit_indices = get_x_distinct_random_numbers(len(chromosome) - 1, x)
 
         # mutated the selected bits
         for i in bit_indices:
@@ -437,9 +445,9 @@ def mutation(chromosome: str) -> str:
 
         return "".join(chromosome_as_list)
 
-    def invert_all_bits_of_x_genes(_chromosome: str, x: int):
+    def invert_all_bits_of_x_genes():
         # split chromosome by genes
-        genes = textwrap.wrap(_chromosome, 4)
+        genes = textwrap.wrap(chromosome, 4)
 
         genes_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
 
@@ -460,9 +468,9 @@ def mutation(chromosome: str) -> str:
 
         return "".join(genes)
 
-    def scramble_all_bits_of_x_genes(_chromosome: str, x: int):
+    def scramble_all_bits_of_x_genes():
         # split chromosome by genes
-        genes = textwrap.wrap(_chromosome, 4)
+        genes = textwrap.wrap(chromosome, 4)
 
         # randomly select the genes to be scrambled
         gene_indices = get_x_distinct_random_numbers(len(genes) - 1, x)
@@ -479,23 +487,29 @@ def mutation(chromosome: str) -> str:
 
         return "".join(genes)
 
-    method, value = MUTATION_METHOD
+    method = MUTATION_METHOD['method']
+    x = MUTATION_METHOD['x']
+    incidence = MUTATION_METHOD['incidence_percent']
 
-    match method:
-        case MutationMethod.INVERT_X_BITS:
-            return invert_x_bits(chromosome, value)
+    if chromosome_mutates():
+        match method:
+            case MutationMethod.INVERT_X_BITS:
+                return invert_x_bits()
 
-        case MutationMethod.INVERT_ONE_BIT_OF_X_GENES:
-            return invert_one_bit_of_x_genes(chromosome, value)
+            case MutationMethod.INVERT_ONE_BIT_OF_X_GENES:
+                return invert_one_bit_of_x_genes()
 
-        case MutationMethod.INVERT_ALL_BITS_OF_X_GENES:
-            return invert_all_bits_of_x_genes(chromosome, value)
+            case MutationMethod.INVERT_ALL_BITS_OF_X_GENES:
+                return invert_all_bits_of_x_genes()
 
-        case MutationMethod.SCRAMBLE_ALL_BITS_OF_X_GENES:
-            return scramble_all_bits_of_x_genes(chromosome, value)
+            case MutationMethod.SCRAMBLE_ALL_BITS_OF_X_GENES:
+                return scramble_all_bits_of_x_genes()
 
-        case _:
-            assert False, 'Mutation not implemented yet'
+            case other:
+                raise Exception(f'Mutation {other} is not yet implemented')
+
+    else:
+        return chromosome
 
 
 def selection(population: [str], scores: [float]) -> [str]:
@@ -673,14 +687,19 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
 if __name__ == "__main__":
 
     nb_individuals = 50
-    nb_genes = 200
+    nb_genes = 100
     target = math.pi
 
-    MUTATION_METHOD = (MutationMethod.INVERT_ONE_BIT_OF_X_GENES, nb_genes//100)
-    SELECTION_METHOD = (SelectionMethod.TOURNAMENT, True)
-    CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, nb_genes//10)
+    MUTATION_METHOD = {
+        'method': MutationMethod.INVERT_ONE_BIT_OF_X_GENES,
+        'x': 4,
+        'incidence_percent': 40
+    }
 
-    sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=10)
+    SELECTION_METHOD = (SelectionMethod.ROULETTE, True)
+    CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
+
+    sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=20)
     print(sorted_population)
     solution = sorted_population[0]
 
