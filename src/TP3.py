@@ -655,14 +655,19 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         best solution
     """
 
+    def is_time_left():
+        return (dt.now() - interval_start).total_seconds() * 2 + (dt.now() - start).total_seconds() < limit_sec
+
     # initialization
 
     population = generate(nb_individuals, nb_genes)
-    cond = True
 
     start = dt.now()
+    interval_start = dt.now()
 
-    while cond:  # TODO: use limit_sec to stop the algorithm after a certain time
+    while is_time_left():
+        interval_start = dt.now()
+
         # evaluation
         fitness_values = [fitness(chromosome, target) for chromosome in population]
         # selection :
@@ -671,13 +676,6 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         population = population_crossover(population)
         # mutation
         population = [mutation(chromosome) for chromosome in population]
-
-        # over ?
-        if (dt.now() - start).total_seconds() >= limit_sec:
-            cond = False
-        #best = sorted(population, key=lambda x: fitness(x, target))[0]
-
-    # TODO: sort population DESC (see docstring) before returning
 
     _p = sorted(population, key=lambda x: fitness(x, target), reverse=True)
 
