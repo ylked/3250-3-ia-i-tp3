@@ -32,7 +32,7 @@ lookup_genes = {
     "1101": "/",
 }
 
-# lookup dict to get the type of the genes
+# lookup dict to get the type of the genes (number or operator)
 lookup_types = {
     "operators":
         [
@@ -58,12 +58,20 @@ lookup_types = {
 
 
 class GeneType(Enum):
+    """
+    Enumeration of the different gene types that can exist
+    """
+
     OPERATOR = 1
     NUMBER = 2
     INVALID = 3
 
 
 class CrossoverMethod(Enum):
+    """
+    Enumeration of the different implemented crossover methods
+    """
+
     # each x bit, exchange the value of the bit from chromomose 1 with the one from chromosome 2
     EXCHANGE_EACH_X_BIT = 1
 
@@ -78,10 +86,15 @@ class CrossoverMethod(Enum):
     EXCHANGE_X_PARTS_BETWEEN_GENES = 4
 
 
+# The default crossover method the AG should use
 CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
 
 
 class MutationMethod(Enum):
+    """
+    Enumeration of the different implemented mutation methods
+    """
+
     # mutates x random bits of the whole chromosome (switching value 0 <-> 1)
     INVERT_X_BITS = 1
 
@@ -95,15 +108,24 @@ class MutationMethod(Enum):
     SCRAMBLE_ALL_BITS_OF_X_GENES = 4
 
 
-# default mutation method
+# The default mutation method the AG should use
 MUTATION_METHOD = {
+    # the method
     'method': MutationMethod.INVERT_ALL_BITS_OF_X_GENES,
+
+    # the X parameter (referring to the x argument of the above method)
     'x': 1,
+
+    # The probability a chromosome gets mutated
     'incidence_percent': 2
 }
 
 
 class SelectionMethod(Enum):
+    """
+    Enumeration of the different implemented selection methods
+    """
+
     # random uniform selection
     UNIFORM = 1
 
@@ -117,14 +139,15 @@ class SelectionMethod(Enum):
     ROULETTE = 4
 
 
-# selection method tuple
+# The default selection method the AG should use
 # 1. first element is the method
-# 2. second element is elitist mode (true/false) to the keep best individual
+# 2. second element is elitist mode (true/false) to always keep the best individual
 SELECTION_METHOD = (SelectionMethod.RANK, True)
 
 
 def decode(chromosome: str) -> str:
-    """Converts a chromosome into a human-readable sequence.
+    """
+    Converts a chromosome into a human-readable sequence.
     example : the chromosome "011010100101110001001101001010100001" should give something like "6 + 5 * 4 / 2 + 1"
     as a result
 
@@ -155,11 +178,23 @@ def decode(chromosome: str) -> str:
             case _:
                 return GeneType.INVALID
 
-    def get_gene_type(gene: str):
-        if gene in lookup_types["operators"]:
+    def get_gene_type(_gene: str):
+        """
+        Get the type of given gene (OPERATOR, NUMBER or INVALID)
+
+        Args:
+            _gene(str): The gene to evaluate
+
+        Returns:
+            GeneType: The type of the given gene
+        """
+
+        if _gene in lookup_types["operators"]:
             return GeneType.OPERATOR
-        if gene in lookup_types["numbers"]:
+
+        if _gene in lookup_types["numbers"]:
             return GeneType.NUMBER
+
         return GeneType.INVALID
 
     # initialisation
@@ -182,18 +217,24 @@ def decode(chromosome: str) -> str:
             # add gene value to result
             result += lookup_genes[gene]
             result += " "
+
             # update expected type
             expected_type = switch_type(expected_type)
+
     # if the last gene was an operator, ignore it
     if expected_type == GeneType.NUMBER:
         result = result[:-2]
+
     # remove last space
     result = result[:-1]
+
     return result
 
 
 def evaluate(chromosome: str) -> float:
-    """Returns the evaluation of a chromosome.
+    """
+    Returns the evaluation of a chromosome.
+
     example : the chromosome "011010100101110001001101001010100001" should return 23 as a result
 
     Args:
@@ -204,37 +245,93 @@ def evaluate(chromosome: str) -> float:
     """
 
     def number(x: str):
+        """
+        Return the integer value of a string. The string must contain a valid number between 0 and 9,
+        otherwise it will fail.
+
+        Args:
+            x(str): The number as string
+
+        Returns:
+            int: the value of the number
+
+        """
+
         assert is_number(x)
         return int(x)
 
     def is_number(x):
+        """
+        Determines whether the given string is a valid number between 0 and 9 or not.
+
+        Args:
+            x(str): The string to evaluate
+
+        Returns:
+            bool: True if the number is valid, false if not
+
+        """
+
         return x.isdigit() and 0 <= int(x) < 10
 
     def is_op(x):
+        """
+        Determines whether the given string is a valid operator or not.
+
+        Args:
+            x(str): The string to evaluate
+
+        Returns: True if the string is a valid operator, false if not
+
+        """
         return x in operations
 
     def is_valid(x):
+        """
+        Determines whether the given string is a valid symbol, i.e. if it is a number or an operator.
+
+        Args:
+            x(str): The string to evaluate
+
+        Returns: True if the symbol is valid, false if not
+
+        """
         return is_op(x) or is_number(x)
 
+    # Mapping of the operator symbols to a function calculating the appropriate result
     operations = {
         '+': lambda x, y: x + y,
         '-': lambda x, y: x - y,
         '*': lambda x, y: x * y,
-        '/': lambda x, y: x / y if y != 0 else 0
+        '/': lambda x, y: x / y if y != 0 else float('nan')
     }
 
+    # This variable will contain the operator between two numbers
     op = None
+
+    # This variable will contain the intermediate result
     res = None
 
+    # looping over all the decoded symbols of the chromosome
+    # Assumptions about decoding function:
+    #   1. Each symbol is separated from the others by a single space
+    #   2. The function only returns valid symbols sequences
     for value in decode(chromosome).split():
+        # checking the above assumption (no. 2)
         assert is_valid(value)
 
         if is_op(value):
             op = value
 
+        # If we encounter the first number (should be first symbol),
+        # We set the intermediate result to the value of the current number
         elif is_number(value) and res is None:
             res = number(value)
 
+        # Otherwise, if the number is not the first one,
+        # we calculate the next intermediate result by doing :
+        # intermediate_result OP current_numner
+        # OP is +, -, * or /
         elif is_number(value) and res is not None:
             assert op is not None
             res = operations[op](res, number(value))
@@ -242,8 +339,9 @@ def evaluate(chromosome: str) -> float:
         elif is_op(value):
             op = value
 
+        # If symbol is neither a number nor an operator, it is invalid or unknown
         else:
-            assert False
+            raise Exception('Unknown or invalid gene type')
 
     return float(res)
 
@@ -259,7 +357,10 @@ Fonction de fitness:
 
 
 def fitness(chromosome: str, target: float) -> float:
-    """The better the chromosome is at giving the target result, the higher the fitness function should be.
+    """
+    Calculates a *fitness value* of a given chromosome.
+
+    The better the chromosome is at giving the target result, the higher the fitness function should be.
 
     Args:
         chromosome (str): a string composed of "0" and "1" that represent a possible sequence
@@ -282,29 +383,85 @@ Opérateurs de croisement, mutation et sélection
 """
 
 
-def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
+def crossover(chromosome_1: str, chromosome_2: str) -> tuple[str, str]:
+    """
+    Crossover the two given chromosomes and return their **two** children.
+
+    The way the chromosomes are reproduced can be configured by editing the CROSSOVER_METHOD tuple global variable.
+
+    Args:
+        chromosome_1(str): The first parent chromosome as a string of 0 and 1
+        chromosome_2(str): The second parent chromosome as string a string of 0 and 1
+
+    Returns:
+        (str, str) : The two children of the given parents
+
+    Note:
+        The two given parent chromosomes **must have the same length**!
+    """
+
     def exchange_x_parts():
-        s1, s2 = [], []
+        """
+        Crossover method that exchanges X parts between the two parents.
+
+
+        For example, if X=2, the first child
+        will get the first half of the first parent and the second half of the second parent.
+        If X=4, the first child will get the first quarter of the first parent, the second quarter of the second
+        parent, the third quarter of the first parent and so on.
+
+        Returns:
+             (str, str) : The two children of the given parents
+
+        Note:
+            The chromosome **must** be equally divisible by X
+
+        """
+
+        child1, child2 = [], []
         size = len(chromosome_1)
+
+        # check that we can equally divide the chromosome by X
         assert size % x == 0
 
+        # number of elements between two parts, depending on the give part size X
         step = size // x
 
         for i in range(x):
+            # Calculates the start and end indices of the parent chromome to give to the children
             start, end = i * step, (i + 1) * step
 
-            c1, c2 = (list(chromosome_1), list(chromosome_2)) \
+            # Select the appropriate parent to give the gene part
+            # This permits to alternate between the two parents
+            giver1, giver2 = (list(chromosome_1), list(chromosome_2)) \
                 if i % 2 == 0 else \
                 (list(chromosome_2), list(chromosome_1))
 
-            s1.extend(c1[start:end])
-            s2.extend(c2[start:end])
+            child1.extend(giver1[start:end])
+            child2.extend(giver2[start:end])
 
-        assert len(s1) == size
-        assert len(s2) == size
-        return "".join(s1), "".join(s2)
+        # Check that the children have the same size as the parents
+        assert len(child1) == size
+        assert len(child2) == size
+
+        return "".join(child1), "".join(child2)
 
     def exchange_each_x_genes():
+        """
+        Performs a crossover operation between two chromosomes by exchanging each block of 'x' genes.
+
+        The method takes two parent chromosomes, divides them into blocks of 'x' genes,
+        and then alternates these blocks between the two parent chromosomes to create two new child chromosomes.
+
+        (*This docstring documentation has been partially generated by chatGPT*)
+
+        Returns:
+            (str, str): A tuple containing the two child chromosomes resulting from the crossover.
+
+        Note:
+            This method assumes that the length of each chromosome is divisible by the length of a gene block ('4 * x').
+        """
+
         g1, g2 = [], []
         size = len(chromosome_1)
 
@@ -332,7 +489,24 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         return "".join(g1), "".join(g2)
 
     def exchange_each_x_bit():
-        s1, s2 = [], []
+        """
+        Performs a crossover operation between two chromosomes by exchanging each block of x bits.
+
+        This method alternates blocks of 'x' bits between two parent chromosomes to create two new child chromosomes.
+        It operates by iterating over the chromosomes and swapping blocks of bits of size 'x' from one parent
+        to the other, and vice versa.
+
+        (*This docstring documentation has been partially generated by chatGPT*)
+
+        Returns:
+            (str, str): A tuple containing the two child chromosomes resulting from the crossover.
+
+        Note:
+            This method assumes that the length of each chromosome is divisible by 'x', the block size of bits.
+
+        """
+
+        child1, child2 = [], []
 
         size = len(chromosome_1)
 
@@ -340,24 +514,21 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         for i in range(size // x):
             start, end = i * x, (i + 1) * x
 
-            c1, c2 = (chromosome_1, chromosome_2) if change else (chromosome_2, chromosome_1)
+            giver1, giver2 = (chromosome_1, chromosome_2) if change else (chromosome_2, chromosome_1)
 
-            s1.extend(c1[start:end])
-            s2.extend(c2[start:end])
+            child1.extend(giver1[start:end])
+            child2.extend(giver2[start:end])
 
             change = not change
 
-        assert len(s1) == len(chromosome_1)
-        assert len(s2) == len(chromosome_2)
+        # check that the children have the same size as the parents
+        assert len(child1) == len(chromosome_1)
+        assert len(child2) == len(chromosome_2)
 
-        return "".join(s1), "".join(s2)
-
-    def exchange_x_parts_between_genes():
-        pass
+        return "".join(child1), "".join(child2)
 
     method, x = CROSSOVER_METHOD
 
-    # maybe to change...
     assert len(chromosome_1) == len(chromosome_2)
 
     match method:
@@ -370,12 +541,10 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         case CrossoverMethod.EXCHANGE_EACH_X_BIT:
             return exchange_each_x_bit()
 
-        case CrossoverMethod.EXCHANGE_X_PARTS_BETWEEN_GENES:
-            exchange_x_parts_between_genes()
-
 
 def population_crossover(population: [str]) -> [str]:
-    """Performs the crossover over the entire population (or a subpart of it)
+    """
+    Performs the crossover over the entire population (or a subpart of it)
 
     Args:
         population (str]): a list of all the chromosomes in the parent population as strings of "0" and "1"
@@ -384,22 +553,35 @@ def population_crossover(population: [str]) -> [str]:
         [str]: a list of all the chromosomes of the children population as strings of "0" and "1"
     """
 
+    # list containing the generated population
     output = []
-    pop = population
+
+    # make a copy of the population
+    pop = population.copy()
+
+    # shuffle the population
     random.shuffle(pop)
+
     s = len(population)
 
+    # Creates the next generation by making chromosome 'i' reproduce with chromosome 'i+1'
     for i in range(len(pop)):
         c1 = pop[i % s]
         c2 = pop[(i + 1) % s]
         output.extend(crossover(c1, c2))
 
+    # check that the next generation is twice as big
     assert len(output) == 2 * len(population)
+
     return output
 
 
 def mutation(chromosome: str) -> str:
-    """Mutates the chromosome
+    """
+    Mutates the chromosome.
+
+    The way the chromosome mutates can be configured by editing MUTATION_METHOD dictionary global variable.
+    Make sure that this function has accessed to the global variable.
 
     Args:
         chromosome (str): the chromosome as a string of "0" and "1"
@@ -409,19 +591,67 @@ def mutation(chromosome: str) -> str:
     """
 
     def invert_bit(bit: str) -> str:
+        """
+        Utility function that inverts bit, given as one character string.
+
+        Args:
+            bit(str): The bit to invert. Must be either '0' or '1'
+
+        Returns:
+            str: The inverted bit. If input was '1', the output will be '0' and vice versa
+
+        """
         assert bit in ['0', '1'], 'Invalid bit value'
         return '0' if bit == '1' else '1'
 
     def get_x_distinct_random_numbers(max_value: int, x: int) -> tuple:
+        """
+        Utility function that returns the given number of distinct random integers. Each number is
+        greater that 0 and less than the given max value.
+
+        Note:
+            Since the number must be distinct, the max value **must** be greater or equal than the number
+            of integers to generate. Otherwise, there are not enough existing numbers :(
+
+        Args:
+            max_value(int): The biggest integer that can be generated (inclusive)
+            x(int): The number of distinct random integers to generate.
+
+        Returns:
+            tuple: A tuple containing the generated integers
+
+        """
+        assert max_value >= x
+
         s = set()
         while len(s) < x:
             s.add(random.randint(0, max_value))
         return tuple(s)
 
     def chromosome_mutates():
+        """
+        Utility function that randomly determines whether the current chromosome must mutate or not,
+        by using the incidence parameter.
+
+        Note:
+            the incidence is defined in the outer function and must represent the percentage of chance
+            that the chromosome will mutate. E.g. if incidence=23, it means that there is 23% chance it will.
+
+        Returns:
+            bool: True if the chromosome must mutate, False if not
+
+        """
         return random.random() * 100 < incidence
 
     def invert_one_bit_of_x_genes():
+        """
+        Mutation method that randomly invert exactly 1 bit on X distinct random genes.
+
+        Returns:
+            str: The mutated chromosome
+
+        """
+
         # split chromosome by genes
         genes = textwrap.wrap(chromosome, 4)
 
@@ -448,6 +678,14 @@ def mutation(chromosome: str) -> str:
         return "".join(genes)
 
     def invert_x_bits():
+        """
+        Mutation method that randomly inverts exactly X distinct bits of the chromosome.
+
+        Returns:
+            str: The mutated chromosome
+
+        """
+
         chromosome_as_list = list(chromosome)
 
         # randomly select x distinct bits to be mutated
@@ -460,6 +698,13 @@ def mutation(chromosome: str) -> str:
         return "".join(chromosome_as_list)
 
     def invert_all_bits_of_x_genes():
+        """
+        Mutation method that inverts all the bits of exactly X distinct random genes.
+
+        Returns:
+            str: The mutated chromosome
+
+        """
         # split chromosome by genes
         genes = textwrap.wrap(chromosome, 4)
 
@@ -483,6 +728,15 @@ def mutation(chromosome: str) -> str:
         return "".join(genes)
 
     def scramble_all_bits_of_x_genes():
+        """
+        Mutation method that randomly scrambles all bits of exactly X distinct random genes.
+
+        For each gene that mutates, the value of the bits does not change but their order in the gene does.
+
+        Returns:
+            str: The mutated chromosome
+        """
+
         # split chromosome by genes
         genes = textwrap.wrap(chromosome, 4)
 
@@ -505,7 +759,10 @@ def mutation(chromosome: str) -> str:
     x = MUTATION_METHOD['x']
     incidence = MUTATION_METHOD['incidence_percent']
 
+    # determining whether the chromosome must mutate
     if chromosome_mutates():
+
+        # select the appropriate method depending on the configuration variable
         match method:
             case MutationMethod.INVERT_X_BITS:
                 return invert_x_bits()
@@ -520,17 +777,21 @@ def mutation(chromosome: str) -> str:
                 return scramble_all_bits_of_x_genes()
 
             case other:
-                raise Exception(f'Mutation {other} is not yet implemented')
+                raise Exception(f'Mutation {other} is not yet implemented or is invalid')
 
+    # If the chromosome does not mutate, we return it as is.
     else:
         return chromosome
 
 
 def selection(population: [str], scores: [float]) -> [str]:
-    """Selects some chromosomes that will be transmited to the next generation
+    """
+    Selects some chromosomes that will be transmitted to the next generation.
+
+    The size of the next generation is exactly the half of the current.
 
     Args:
-        population ([str]): all of the curent generation
+        population ([str]): the current generation
         scores ([float]): the fitness values of the chromosomes such that fitness(population[i]) = score[i]
 
     Returns:
@@ -538,23 +799,47 @@ def selection(population: [str], scores: [float]) -> [str]:
     """
 
     def uniform_selection():
+        """
+        Uniformly and randomly select the population to constitute the next generation.
+
+        Returns:
+            [str]: The next generation.
+
+        """
         next_gen: list = population
 
         random.shuffle(next_gen)
         next_gen = next_gen[:len(population) // 2]
 
         if elitist:
-            best = sorted_population[0]
+            best = _sorted_population[0]
             if best not in next_gen:
                 next_gen[0] = best
 
         return next_gen
 
     def rank_selection():
-        return sorted_population[:len(population) // 2]
+        """
+        Select the best half of the population.
+        Returns:
+            [str]: The next generation.
+
+        """
+        return _sorted_population[:len(population) // 2]
 
     def tournament_selection():
+        """
+        Select the population by making a tournament. We randomly make as many chromosome pairs as possible and
+        select the one that has the best fitness value.
+
+        Returns:
+            [str]: The next generation.
+
+        """
         next_gen = []
+
+        # Since we will shuffle the population, it is easier to make a dictionary
+        # to find the fitness values of each chromosome
         lookup_scores = {}
         for i in range(len(population)):
             lookup_scores[population[i]] = scores[i]
@@ -564,11 +849,13 @@ def selection(population: [str], scores: [float]) -> [str]:
 
         random.shuffle(pool)
 
+        # make the pairs
         for i in range(0, len(pool), 2):
             c1 = pool[i]
             c2 = pool[i + 1]
             pairs.append((c1, c2))
 
+        # make them fight and keep the best
         for c1, c2 in pairs:
             score1, score2 = lookup_scores[c1], lookup_scores[c2]
             next_gen.append(c1 if score1 > score2 else c2)
@@ -576,12 +863,26 @@ def selection(population: [str], scores: [float]) -> [str]:
         return next_gen
 
     def roulette_selection():
+        """
+        Roulette selection method to make the next generation.
+        Each chromosome has a probability to be selected that is proportional to its fitness value.
+
+        Returns:
+            [str]: The next generation.
+
+        """
+
+        # Scores of the chromosome, offset to be strictly positive
         w = [x - min(scores) + 1 for x in scores]
+
+        # Randomly select the indices of the chromosome to select, based on their scores
         indices = random.choices(range(len(population)), weights=w, k=len(population) // 2)
 
+        # Generate the list containing the selected population
         next_gen = [population[i] for i in indices]
 
-        best = sorted_population[0]
+        # check that the best chromosome has been kept (if appropriate)
+        best = _sorted_population[0]
         if elitist and best not in next_gen:
             next_gen.append(best)
 
@@ -589,7 +890,8 @@ def selection(population: [str], scores: [float]) -> [str]:
 
     method, elitist = SELECTION_METHOD
 
-    sorted_population = [p for _, p in sorted(zip(scores, population), reverse=True)]
+    # sort the population by descending fitness value. Useful for some selection methods.
+    _sorted_population = [p for _, p in sorted(zip(scores, population), reverse=True)]
 
     match method:
         case SelectionMethod.UNIFORM:
@@ -712,7 +1014,7 @@ if __name__ == "__main__":
     SELECTION_METHOD = (SelectionMethod.ROULETTE, True)
     CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
 
-    sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=20)
+    sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=5)
     print(sorted_population)
     solution = sorted_population[0]
 
