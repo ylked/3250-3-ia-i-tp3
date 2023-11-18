@@ -1,9 +1,13 @@
 ---
 subtitle: 3250.3 Intelligence artificielle I
 title: Travail pratique 3 - Le Compte Est Bon
-author: Nima Dekhli \& Maëlys Bühler
+author: |
+  | Nima Dekhli 
+  | Maëlys Bühler
 date: Le \today
 lang: fr-CH
+bibliography: sources.bib
+csl: iso690-numeric-fr.csl
 geometry: 
   - margin=2cm
   - includehead
@@ -28,11 +32,12 @@ lstPrefix:
   - code
   - codes
 
-toc: false
+toc: true
 toc-depth: 4
 header-includes: |
     \usepackage{fancyhdr}
-    \pagestyle{fancy}\usepackage{float}
+    \pagestyle{fancy}
+    \usepackage{float}
     \let\origfigure=\figure
     \let\endorigfigure=\endfigure
     \renewenvironment{figure}[1][]{%
@@ -40,52 +45,172 @@ header-includes: |
     }{%
       \endorigfigure
     }
-
+    \usepackage{biblatex}
 ---
 
-# Introduction
-De nos jours, l'intelligence artificielle est un domaine très recherché et en pleine extension. En effet, elle est utilisée dans de nombreux domaines tels que la médecine, la finance, la robotique, etc. Dans ce travail pratique, nous allons nous intéresser à un jeu de calcul mental, le compte est bon. Ce jeu consiste à trouver une expression mathématique en manipulant des 10 digits (0,1,2,3,4,5,6,7,8,9) et en leur appliquant des opérations de base (+,-,*,/) pour atteindre un nombre cible. Pour cela, nous allons utiliser un algorithme génétique. Ce dernier est un algorithme qui s'inspire de la théorie de l'évolution de Darwin, et de la génétique de Mendel.  
-Dans cet algorithme, les potentielles solutions sont des chromosomes, faisant partie d'une population - L'ensemble des solutions à tester - et sont composés de gènes, qui sont ici les nombres et opérateurs.
+# Préambule
 
-# L'implémentation
-Notre implémentation est en python, reprenant le modèle python fourni initialement. Aucune définition de fonction n'a été changé.  
-Les différentes étapes de l'algorithme comporte plusieurs méthodes possible. Ces méthodes sont chacunes décrites dans des énumérations.  
-En haut du programme, des variables globales sont déclarées pour indiquer les méthodes utilisés pour chaque étapes.
-## Décodage d'un chromosome
-La fonction de décodage permet de passer d'un chromosome binaire, donc chaque groupe de 4 bit représente un gène, à une chaîne de caractère représentant une suite d'opération valide.  
-Si un chromosome comporte des opérations invalide, on va les ignorer dans le résultat final.  
-Voilà quelques exemples d'opérations invalide (Ici déjà décodées pour rendre compréhensible le problème:)
-### 2 digits consécutifs
+## Introduction
 
-    3 + 4 5 / 3   ->   3 + 4 / 3
-Ici, deux digits se suivent, le deuxième digit, le 5, sera donc ignoré.
+L'intelligence artificielle, dont la popularité n'a fait qu'augmenter au cours des dernières décennies [@cardillo-2023], est aujourd'hui utilisée dans des domaines aussi variés que la médecine, la finance ou même l'agriculture [@marr-2023].
 
-### 2 opérateurs consécutifs
+Les algorithmes génétiques font parties de l'ensemble des algorithmes évolutionnistes, inspirés par certains principes biologiques et en particulier de la théorie de l'évolution. Ils permettent de générer une population de solutions potentielles qui va évoluer au fil des générations dans l'optique que les individus soient toujours plus aptes à résoudre le problème donné. [@genetic-algo;@evol-algo]
 
-    3 + - 5   ->   3 + 5
-Ici, deux opérateurs se suivent, le deuxième opérateur, le -, sera donc ignoré.
+Les principes de bases sont la reproduction (deux parents donnent des enfants dont la patrimoine génétique est constitué de celui des parents), la mutation (modification aléatoire d'un ou plusieurs gènes) et la sélection (élimination des individus les moins adaptés). 
 
-### Division par 0
+## Contexte
 
-    3 + 5 / 0 + 6   ->   3 + 5 + 6
-Ici, une division par zéro a lieu. Ce n'est pas valide mathématiquement, on va donc ignorer cette division
+Il est demandé d'implémenter un algorithme génétique afin de résoudre le jeu "*Le compte est bon*" en Python. Le principe du jeu est le suivant :  A l'aide des nombres entiers de 0 à 9 et des opérateurs mathématiques de base (addition, soustraction, multiplication et division), trouver une suite de nombres et d'opérateurs permettant d'atteindre une cible numérique donnée. 
 
-### Gène invalide
+Chaque individu représente une suite de nombre et d'opérateurs. Un individu est représenté par son chromosome qui est une suite de gènes. Chaque gène représente un nombre, un opérateur ou un gène invalide (qui ne contribue pas au calcul). Chaque gène est encodé par une suite de 4 symboles 1 ou 0 (encodage binaire). 
 
-    3 + n/a 5   ->   3 + 5
-Les gènes sont encodés en binaire, sur 4 bits, cela laisse donc la possiblité d'avoir 16 caractères, seulement, nous n'en utilisons que 14, il reste donc 2 gènes possible, qui ne correspondent à aucun gène. Si l'un gène pareil est obtenu, il est ignoré.
+## Objectifs
 
-## Evaluation d'un chromosome
-L'evaluation d'un chromosome permet d'obtenir le résultat du chromosome.
-Dans notre cas, nous commençons pas obtenir le chromosome décodé, afin d'avoir une suite d'opération valide à évaluer.  
-On va donc évaluer les charactères du chromosome décodés les uns après les autres, et leur appliquer les opérations obtenues.  
-Si une opération invalide est trouvée, cela indiquerait un défaut dans la fonction de décodage, et le problème va s'arrêter.
+Ce document a pour but de décrire le travail effectué ainsi que les choix qui l'y ont mené. 
 
-## Fonction de fitness
-La fonction de fitness doit retourner une valeur pour indiquer à quelle point le chromosome est une bonne solution. Plus la valeur est élevée, meilleure la solution est.  
-Une seule fonction de fitness a été implémentée dans notre solution, et elle retourne simplement l'opposé de la différence entre le résultat recherché et le résultat de l'évaluation du chromosome.
 
-## Les crossover de deux chromosomes
+
+# Implémentation
+
+## Introduction
+
+L'implémentation est intégralement effectuée au sein d'un unique script Python qui a été fourni par l'enseignant au début de travail. Les signatures des fonctions qui étaient initialement présentes n'ont pas été changées. 
+
+La manière dont sont effectuées les opérations génétiques de base (sélection, reproduction et mutation) peut être modifiée à l'aide de plusieurs variables globales. Cette méthodologie permet d'étendre les fonctionnalité du programme sans pour autant changer les signatures proposées. 
+
+## Encodage des individus
+
+La correspondance entre le symbole (nombre ou opérateur) et l'encodage du gène est celle proposée par l'enseignant, à savoir : 
+
+| Symbole | Encodage |
+| :-----: | -------- |
+|    0    | `0000`   |
+|    1    | `0001`   |
+|    2    | `0010`   |
+|    3    | `0011`   |
+|    4    | `0100`   |
+|    5    | `0101`   |
+|    6    | `0110`   |
+|    7    | `0111`   |
+|    8    | `1000`   |
+|    9    | `1001`   |
+|   `+`   | `1010`   |
+|   `-`   | `1011`   |
+|   `*`   | `1100`   |
+|   `/`   | `1101`   |
+
+Dans l'implémentation, chaque individu est alors représenté par son chromosome qui est une **chaîne de caractères**, dont la taille est un multiple de 4. Une population est un ensemble d'individus et est représentée par une liste de chaîne de caractères. 
+
+Les deux codes `1110` et `1111` ne sont pas utilisés et sont considérés comme invalides. 
+
+## Décodage {#sec:decodage}
+
+### Principe
+
+La fonction de décodage permet de convertir un chromosome en une représentation humaine. Celle-ci est constituée de la suite des nombres et des opérateurs encodés par le chromosome, en ignorant les opérations invalides. 
+
+### Opérations invalides
+
+Au fil des reproductions et des mutations aléatoires, des symboles ou des suite d'opérations invalides peuvent apparaitre. Par exemple, les deux codes inutilisés ne sont pas valides. Mais aussi, on considère qu'une suite d'opérations valide est de la forme : 
+$$
+x_0 \Lambda_1 x_1 \Lambda_2 x_2 \dots x_{n-1}\Lambda_n x_n
+$$
+Où $x_1\dots x_n$ sont les nombres et $\Lambda_1\dots \Lambda_n$ sont les opérateurs. 
+
+Ainsi, dans le cas où deux nombres ou opérateurs (ou plus) se suivent, l'opération n'a pas de sens. Dans l'implémentation actuelle, la première occurence d'un type de symbole valide est retenue et les symboles invalides suivants sont ignorés jusqu'à ce que l'autre type apparaisse. 
+
+Par exemple, l'opération : 
+$$
+x_1 \Lambda_1 \Lambda_2 x_2 x_3\Lambda_3
+$$
+est interprétée de la manière suivante : 
+$$
+x_1 \Lambda_1 x_2
+$$
+
+### Division par zéro 
+
+La division par zéro est également un cas spécial qui risque d'apparaitre et qu'il faut traiter. Afin de simplifier l'implémentation, il a été choisi **d'ignorer** les divisions par zéro. Cela veut dire que cette opération est traitée de la même manière que les opérations invalides. 
+
+Par exemple, l'opération : 
+$$
+x_1 \Lambda_1 0 \Lambda_2 x_3 \quad, \Lambda_1 \equiv \mbox{ "division"}
+$$
+Devient :
+$$
+x_1 \Lambda_2 x_3
+$$
+
+
+### Fonction
+
+La fonction reçoit un chromosome sous forme de chaîne de caractères et retourne le décodage en représentation humaine, également sous forme de chaîne de caractères. Chaque symbole est séparé du suivant par la caractère *espace*. 
+
+## Evaluation
+
+### Principe
+
+L'évaluation du chromosome consiste à obtenir le résultat des opérations (valides) qui le constitue, sous la forme d'un nombre réel. C'est ce résultat qui devra converger vers la cible donnée. 
+
+### Implémentation
+
+La fonction va utiliser le résultat retourné par le décodage (c.f. @sec:decodage). La chaîne de caractère qui est retournée va être divisée à chaque *espace* pour en former une liste. Chacun des éléments de la liste est soit un nombre compris entre 0 et 9 sous forme de caractère, soit un des caractères `+`, `-`, `*` ou `/`. 
+
+Les nombres peuvent être convertis en un entier à l'aide de la fonction Python `int()`. Les opérateurs sont lié à une fonction grâce à un dictionnaire qui permet d'effectuer l'opération correspondante. Le code constituant le dictionnaire est montré dans le @lst:lambda. En cas de division par zéro (qui ne devrait jamais arriver), la fonction division renvoie *NaN*. 
+
+```{#lst:lambda .py caption="Dictionnaire qui fait correspondre l'opérateur à une fonction"}
+operations = {
+    '+': lambda x, y: x + y,
+    '-': lambda x, y: x - y,
+    '*': lambda x, y: x * y,
+    '/': lambda x, y: x / y if y != 0 else float('nan')
+}
+```
+
+Chacun des éléments de la liste est donc ainsi interprété et un résultat numérique réel en est obtenu.
+
+## Fitness
+
+### Principe
+
+Une fonction de fitness permet d'évaluer l'efficacité d'une solution. Elle fait correspondre un individu avec un score, représenté par un nombre réel. Plus cette valeur est élevée, plus la solution est efficace.
+
+### Implémentation
+
+La fonction va commencer par évaluer le chromosome pour obtenir la valeur de la solution. Ensuite, l'opposé de la différence entre la valeur de la solution et celle de la cible est retournée. 
+$$
+\mathrm{fitness}(x, A) = - \left| \mathrm{eval}(x) - A \right|
+$$
+où $x$ est le chromosome et $A$ est la cible. 
+
+La valeur de fitness d'une solution réduit ainsi **linéairement** par rapport à sa distance à la cible. 
+
+D'autres approches existent, telles que les fonctions quadratiques, exponentielles ou logarithmiques, mais elles n'ont pas été explorées dans le cadre de ce travail. 
+
+## Croisement
+
+### Principe
+
+Le croisement entre deux chromosome consiste à la génération de chromosomes enfants dont le patrimoine génétique est constitué de celui des deux parents. 
+
+### Implémentation
+
+Trois méthodes différentes détaillées dans les paragraphes suivants ont été implémentées. Le croisement retourne toujours exactement deux enfants.
+
+#### Découpage en $n$ parties
+
+Le principe est le suivant : Le chromosome de chacun des deux parent est divisé en $n$ parties de taille égale. 
+
+#### Echange tous les $n$ bits
+
+#### Echange tous les $n$ gènes
+
+
+
+### Croisement d'une population
+
+
+
 Le crossover de deux chromosomes consiste à retourner 2 chromosomes, qui sont des mélanges des deux chromosomes de base.  
 Pour le crossover, on a 3 méthodes possibles. La méthode utilisée est choisie en utilisant la variable globale CROSSOVER_METHOD, qui consiste en un tuple, avec comme première valeur, la méthode choisie, et en deuxième valeur, le paramètre de la méthode (une valeur entière).  
 Pour rendre l'implémentation plus facile, nous partons du principe que les deux chromosomes obtenus en paramètre sont de même longueur, et les chromosomes qui résulte de la fonction seront aussi aussi de la même longueur que leurs parents
@@ -185,3 +310,19 @@ Cette méthode n'a pas été modifiée, et correspond donc à la version origina
 
 ## L'algorithme génétique
 Cette méthode n'a pas été modifiée, et correspond donc à la version originale qui se trouvait dans le modèle de départ
+
+# Analyse
+
+# Conclusion
+
+## Travail effectué
+
+## Limitations
+
+## Perspectives
+
+
+
+# Bibliographie
+
+\printbibliography
