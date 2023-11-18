@@ -4,10 +4,9 @@ Nous souhaitons réaliser une IA basée sur les algorithmes génétiques permett
 """
 import math
 import random
-from enum import Enum
 import textwrap
-
 from datetime import datetime as dt
+from enum import Enum
 
 """
 ***********************************************************************************************************
@@ -122,6 +121,7 @@ class SelectionMethod(Enum):
 # 1. first element is the method
 # 2. second element is elitist mode (true/false) to the keep best individual
 SELECTION_METHOD = (SelectionMethod.RANK, True)
+
 
 def decode(chromosome: str) -> str:
     """Converts a chromosome into a human-readable sequence.
@@ -268,8 +268,8 @@ Opérateurs de croisement, mutation et sélection
 ***********************************************************************************************************
 """
 
-def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
 
+def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
     def exchange_x_parts():
         s1, s2 = [], []
         size = len(chromosome_1)
@@ -360,6 +360,7 @@ def crossover(chromosome_1: str, chromosome_2: str) -> [str]:
         case CrossoverMethod.EXCHANGE_X_PARTS_BETWEEN_GENES:
             exchange_x_parts_between_genes()
 
+
 def population_crossover(population: [str]) -> [str]:
     """Performs the crossover over the entire population (or a subpart of it)
 
@@ -377,10 +378,10 @@ def population_crossover(population: [str]) -> [str]:
 
     for i in range(len(pop)):
         c1 = pop[i % s]
-        c2 = pop[(i+1) % s]
+        c2 = pop[(i + 1) % s]
         output.extend(crossover(c1, c2))
 
-    assert len(output) == 2*len(population)
+    assert len(output) == 2 * len(population)
     return output
 
 
@@ -546,7 +547,7 @@ def selection(population: [str], scores: [float]) -> [str]:
             lookup_scores[population[i]] = scores[i]
 
         pairs = []
-        pool:list = population
+        pool: list = population
 
         random.shuffle(pool)
 
@@ -592,6 +593,7 @@ def selection(population: [str], scores: [float]) -> [str]:
 
         case _:
             raise Exception('Chosen selection method has not been implemented yet')
+
 
 """
 ***********************************************************************************************************
