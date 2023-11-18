@@ -151,11 +151,14 @@ def decode(chromosome: str) -> str:
 
     for gene in genes:
         gene_type = get_gene_type(gene)
+
         # ignore division by zero
-        if len(result) > 2 and result[-2] == "/" and lookup_genes[gene] == "0":
-            result = result[:-2]
-            expected_type = switch_type(expected_type)
-            continue
+        if gene in lookup_genes.keys():
+            if len(result) > 2 and result[-2] == "/" and lookup_genes[gene] == "0":
+                result = result[:-2]
+                expected_type = switch_type(expected_type)
+                continue
+
         # ignore if gene is invalid, or not of type expected
         if len(gene) == 4 and gene in lookup_genes.keys() and gene_type == expected_type:
             # add gene value to result
@@ -531,13 +534,11 @@ def selection(population: [str], scores: [float]) -> [str]:
         pairs = []
         pool:list = population
 
-        while len(pool) >= 2:
-            c1 = random.choice(pool)
-            pool.remove(c1)
+        random.shuffle(pool)
 
-            c2 = random.choice(pool)
-            pool.remove(c2)
-
+        for i in range(0, len(pool), 2):
+            c1 = pool[i]
+            c2 = pool[i + 1]
             pairs.append((c1, c2))
 
         for c1, c2 in pairs:
@@ -547,16 +548,16 @@ def selection(population: [str], scores: [float]) -> [str]:
         return next_gen
 
     def roulette_selection():
-        s = set()
+        w = [x - min(scores) + 1 for x in scores]
+        indices = random.choices(range(len(population)), weights=w, k=len(population) // 2)
 
-        if elitist:
-            s.add(sorted_population[0])
+        next_gen = [population[i] for i in indices]
 
-        while len(s) < len(population) // 2:
-            # we need to add an offset to the scores because they are negatives and
-            # the random.choices does not like it...
-            s.add(random.choices(population, weights=[x - min(scores) + 1 for x in scores])[0])
-        return list(s)
+        best = sorted_population[0]
+        if elitist and best not in next_gen:
+            next_gen.append(best)
+
+        return [population[i] for i in indices]
 
     method, elitist = SELECTION_METHOD
 
