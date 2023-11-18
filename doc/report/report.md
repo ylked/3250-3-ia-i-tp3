@@ -16,6 +16,11 @@ urlcolor: MidnightBlue
 numbersections: true
 links-as-notes: true
 
+mainfont: Latin Modern Roman
+sansfont: Latin Modern Sans
+
+documentclass: scrreport
+
 lofTitle: Liste des figures
 lolTitle: Liste des codes
 listingTitle: Code
