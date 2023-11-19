@@ -32,6 +32,14 @@ lstPrefix:
   - code
   - codes
 
+tblPrefix:
+  - table
+  - tables
+
+figPrefix:
+  - figure
+  - figures
+
 toc: true
 toc-depth: 4
 header-includes: |
@@ -73,7 +81,7 @@ La manière dont sont effectuées les opérations génétiques de base (sélecti
 
 ## Encodage des individus
 
-La correspondance entre le symbole (nombre ou opérateur) et l'encodage du gène est celle proposée par l'enseignant, à savoir : 
+La correspondance entre le symbole (nombre ou opérateur) et l'encodage du gène est celle proposée par l'enseignant, représenté dans la @tbl:encoding.
 
 | Symbole | Encodage |
 | :-----: | -------- |
@@ -91,6 +99,8 @@ La correspondance entre le symbole (nombre ou opérateur) et l'encodage du gène
 |   `-`   | `1011`   |
 |   `*`   | `1100`   |
 |   `/`   | `1101`   |
+
+: Encodage binaire des nombres et des opérations {#tbl:encoding}
 
 Dans l'implémentation, chaque individu est alors représenté par son chromosome qui est une **chaîne de caractères**, dont la taille est un multiple de 4. Une population est un ensemble d'individus et est représentée par une liste de chaîne de caractères. 
 
@@ -216,13 +226,27 @@ Cela permet d'effectuer un croisement de population de manière aléatoire, sans
 
 ### Principe
 
+La mutation d'un chromosome est un principe fondamental des algorithmes génétiques. Elle permet de diversifier la population et d'apporter des solutions originales. 
+
+Lorsque qu'un bit du chromosome est muté, sa valeur est inversée. Cela signifie que s'il valait 1, il vaudra maintenant 0 et vice-versa. 
+
+Quatre méthodes de mutations ont été implémentées. Pour chacune d'elles, il est possible de choisir un paramètre $n$ qui correspond au taux de modification du chromosome muté et de l'incidence de mutation. L'incidence correspond à la probabilité qu'a un chromosome d'être muté. 
+
 ### Inversion de $n$ bits
+
+Cette méthode va aléatoirement sélectionner $n$ bits du chromosome et va inverser leur valeur. 
 
 ### Inversion de 1 bit sur $n$ gènes
 
+Cette méthode va aléatoirement sélectionner $n$ gènes à muter, et que sur chacun d'entre eux, elle va sélectionner aléatoirement un seul bit qui sera inversé. 
+
 ### Inversion de tous les bits sur $n$ gènes
 
+Cette méthode va aléatoirement sélectionner $n$ gènes à muter, et que sur chacun d'entre eux, elle va inverser tous les bits qui le constitue. 
+
 ### Mélange des bits de $n$ gènes
+
+Cette méthode va aléatoirement sélectionner $n$ gènes à muter. Ensuite, pour chacun d'entre eux, elle va changer l'ordre des bit qui le constitue, de manière aléatoire. 
 
 ## Sélection
 
@@ -262,73 +286,11 @@ L'implémentation est plus complexe. Nous utilisons la méthode `random.choices(
 
 Le problème est que notre fonction de fitness retourne des valeurs négatives alors que les poids de la fonction doivent être positifs. Pour remédier à ce problème, on ajoute un décalage constant aux scores. On récupère la plus petite valeur de score et on effectue à tous le monde le décalage de cette valeur, en ajoutant 1. De cette manière, le plus petit score vaudra 1 et tous les autres seront plus grand que 1 et donc positifs. 
 
-***
-
-### Découpage des chromosomes en un nombre n de parties
-
-Cette méthode correspond à la valeur EXCHANGE_X_PARTS. Exemple de valeur de la variable globale:
-
-    CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
-
-Cette méthode va découper les chromosomes en un nombre de partie indiquée dans la variable globale, et échanger entre les deux chromosomes une partie sur deux pour créer les chromosomes finaux. Par exemple, pour la valeur passé en paramètre 4, et les deux chromosomes suivants: "00000000" et "11111111", on obtiendra les enfants suivant:
-"00110011" et "11001100".
-
-### Echange tout les n bits
-Cette méthode correspond à la valeur EXCHANGE_EACH_X_BIT. Exemple de valeur de la variable globale:
-
-    CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_EACH_X_BIT, 1)
-Cette méthode va échanger les bits une fois sur deux, tout les n nombre de bit (n étant la valeur indiquée dans la variable globale).  
-Par exemple, pour la valeur passé en paramètre 1, et les deux chromosomes suivants: "00000000" et "11111111", on obtiendra les enfants suivant:
-"01010101" et "10101010".
-
-### Echange tout les n gènes
-Cette méthode correspond à la valeur EXCHANGE_EACH_X_GENE. Exemple de valeur de la variable globale:
-
-    CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_EACH_X_GENE, 1)
-Cette méthode va échanger les genes une fois sur deux, tout les n nombre de genes (n étant la valeur indiquée dans la variable globale).  
-Par exemple, pour la valeur passé en paramètre 1, et les deux chromosomes suivants: "0000000000000000" et "1111111111111111", on obtiendra les enfants suivant:
-"0000111100001111" et "1111000011110000".
-
-## Mutation d'un chromosome
-La mutation d'un chromosome consiste à modifier son contenu.  
-Nous avons pour cette étape 4 méthodes. Toutes ces méthodes dépendant d'un algorithme de pseudo aléatoire déjà implémenté dans le langage python.
-La méthode utilisée est choisie en utilisant la variable globale MUTATION_METHOD, qui consiste en un tuple, avec comme première valeur, la méthode choisie, et en deuxième valeur, le paramètre de la méthode (une valeur entière).  
-### Inversion de n bits
-Cette méthode correspond à la valeur INVERT_X_BIT de l'énumération. Exemple:
-
-    MUTATION_METHOD = (MutationMethod.INVERT_X_BIT, 4)
-Cette méthode va choisir de manière aléatoire n bits du chromosome (ou n est la deuxième valeur de la variable globale), et les inverser, c'est à dire faire passer 1 à 0, et 0 à 1. Par exemple, pour le chromosome "11111111" avec la valeur n=4, on pourrait obtenir: "10110010" (Les index 1,4,5,7 ont été inversés).
-
-### Inversion de 1 bits pour n gènes
-Cette méthode correspond à la valeur INVERT_ONE_BIT_OF_X_GENES de l'énumération. Exemple:
-
-    MUTATION_METHOD = (MutationMethod.INVERT_ONE_BIT_OF_x_GENES, 2)
-Cette méthode va choisir de manière aléatoire n gènes du chromosome (ou n est la deuxième valeur de la variable globale), et inverser un bit choisi aléatoirement pour chacun. Par exemple, pour le chromosome "1111000011110000" avec la valeur n=2, on pourrait obtenir: "1011000011110010" (Les index 1 et 14 dans les gènes 0 et 3 ont été inversés).
-
-### Inversion de tout les bits de n gènes
-Cette méthode correspond à la valeur INVERT_ALL_BITS_OF_X_GENES de l'énumération. Exemple:
-
-    MUTATION_METHOD = (MutationMethod.INVERT_ALL_BITS_OF_X_GENES, 2)
-Cette méthode va choisir de manière aléatoire n genes du chromosome (ou n est la deuxième valeur de la variable globale), et inverser tout leurs bits. Par exemple, pour le chromosome "1111000011110000" avec la valeur n=2, on pourrait obtenir: "1111111100000000" (Les 2ème et 3ème gènes ont été inversés).
-
-### Mélange de tout les bits de n gènes
-Cette méthode correspond à la valeur SCRAMBLE_ALL_BITS_OF_X_GENES de l'énumération. Exemple:
-
-    MUTATION_METHOD = (MutationMethod.SCRAMBLE_ALL_BITS_OF_X_GENES, 2)
-Cette méthode va choisir de manière aléatoire n genes du chromosome (ou n est la deuxième valeur de la variable globale), et mélanger de manières aléatoire tout leurs bits. Par exemple, pour le chromosome "1001100110011001" avec la valeur n=2, on pourrait obtenir: "1100100101101001" (Les 1er et 3ème gènes ont été mélangés).
-
-
-## Génération d'une population initiale
-Cette méthode n'a pas été modifiée, et correspond donc à la version originale qui se trouvait dans le modèle de départ
-
-## L'algorithme génétique
-Cette méthode n'a pas été modifiée, et correspond donc à la version originale qui se trouvait dans le modèle de départ
-
-# Analyse
+# Analyse {#sec:analyse}
 
 ## Introduction
 
-Comme vu dans la @sec:iml, plusieurs méthodes ont été implémentées, que ce soit pour la mutation, la sélection ou le croisement. De plus, chacune d'entre elles peuvent être ajustées avec un ou plusieurs paramètres. 
+Comme vu dans la @sec:impl, plusieurs méthodes ont été implémentées, que ce soit pour la mutation, la sélection ou le croisement. De plus, chacune d'entre elles peuvent être ajustées avec un ou plusieurs paramètres. 
 
 Dans cette section, les différentes fonctionnalités sont évaluées afin d'en déduire les méthodes et les paramètres les plus efficaces. 
 
@@ -480,7 +442,7 @@ On remarque qu'un trop faible nombre de gènes a pour effet d'empêcher de trouv
 
 Il faut donc choisir suffisamment de gène pour avoir une population diversifiée qui permette de trouver une solution précise mais pas trop pour ne pas ralentir l'algorithme. 
 
-**De ce constat, il a été choisit d'encoder chaque individu sur 50 gènes pour la version optimisée de l'algorithme.** 
+**De ce constat, il a été choisit d'encoder chaque individu sur 100 gènes pour la version optimisée de l'algorithme.** 
 
 ## Taille de la population
 
@@ -498,15 +460,49 @@ Sur la @fig:plot-population-size est représentée la valeur de fitness du meill
 
 On remarque que s'il y a trop peu d'individu, la précision du résultat varie entre plusieurs tests. Alors que quand le nombre d'individu est plus grand, les variations sont quasi-inexistantes. Toutefois, une taille de population plus élevée implique un plus grand nombre de calculs à effectuer à chaque itération et donc un temps plus grand nécessaire à la convergence vers une bonne solution. 
 
-On remarque toutefois qu'à partir d'une centaine d'individu, les résultats semblent être bons et ne pas trop varier. **C'est de ce constat que la taille de la population a été choisie à 100 individus pour la version optimisée de l'algorithme.** 
+On remarque toutefois qu'à partir d'une centaine d'individu, les résultats semblent être bons et ne pas trop varier. **C'est de ce constat que la taille de la population a été choisie à 200 individus pour la version optimisée de l'algorithme.** 
+
+## Algorithme optimisé
+
+### Paramètres
+
+Selon l'analyse qui a été effectuée, les paramètres représentés dans la @tbl:opti ont été choisis. 
+
+| Paramètre             | Valeur                                                       |
+| --------------------- | ------------------------------------------------------------ |
+| Méthode de mutation   | Inversion de 1 bit sur 10% des gènes avec une incidence de 30% |
+| Méthode de sélection  | Tournoi élitiste                                             |
+| Méthode de croisement | Echange de 4 parties                                         |
+| Nombre de gènes       | 50                                                           |
+| Taille de population  | 100                                                          |
+
+: Paramètres de l'algorithme optimisé {#tbl:opti}
+
+### Résultats
+
+![Evolution du fitness en fonction du nombre d'itérations sur l'AG optimisé](assets/plot-final-all.png)
+
+On remarque que le meilleur individu converge rapidement vers la cible et qu'après quelques dizaines d'itérations, le résultat est déjà presque exactement égal à la cible. 
+
+Le test a été effectué avec une limite de temps de 5 secondes. 
+
+Cherchons maintenant le nombre $\pi$ avec la plus grande précision possible. Pour cela, nous augmenterons la limite de temps à 60 secondes. 
+
+La meilleure solution trouvée vaut : $3.1415637860082306$, avec la suite d'opération suivante : `0 + 2 * 1 * 3 - 8 - 1 - 9 * 3 - 7 + 8 - 7 - 0 - 6 / 5 * 6 / 2 / 9 / 9 + 2 + 6 / 6 / 9 + 3` . L'erreur absolue est donc d'environ $2.8887 \cdot 10 ^{-5}$. 
 
 # Conclusion
 
-## Travail effectué
+Il nous a été demandé d'implémenter un algorithme génétique en Python pour le jeu "Le Compte Est Bon" et de choisir les paramètres afin de l'optimiser. 
 
-## Limitations
+L'implémentation, permettant la configuration simple des méthodes et des paramètres, a grandement simplifié l'analyse, dont la génération des graphes a pu être automatisée. 
 
-## Perspectives
+Dans sa version finale et optimisée, l'algorithme est capable de trouver une suite de nombre et d'opérateur qui donne la cible en quelques dizaines d'itérations seulement. La limite de temps donné est toujours strictement respectée. 
+
+La précision des solutions trouvée est toujours inférieure à 0.001, avec les paramètres optimisés et une limite de temps supérieure à 5 secondes. 
+
+Toutefois, la fonction de fitness linéaire n'est pas optimale, en particulier lors de l'utilisation de la méthode de sélection par roulette. La précision des solutions pourrait aussi être améliorée. 
+
+En conclusion, l'algorithme génétique implémenté donne des résultats cohérents, consistants et dans un temps raisonnable. 
 
 
 
