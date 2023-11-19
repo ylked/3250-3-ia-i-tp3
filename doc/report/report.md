@@ -38,13 +38,6 @@ header-includes: |
     \usepackage{fancyhdr}
     \pagestyle{fancy}
     \usepackage{float}
-    \let\origfigure=\figure
-    \let\endorigfigure=\endfigure
-    \renewenvironment{figure}[1][]{%
-      \origfigure[H]
-    }{%
-      \endorigfigure
-    }
     \usepackage{biblatex}
 ---
 
@@ -235,15 +228,39 @@ Cela permet d'effectuer un croisement de population de manière aléatoire, sans
 
 ### Principe
 
+La sélection permet de ne garder que les individus les plus adaptés, et d'éliminer les autres. Les individus sélectionnés auront le privilège de se croiser entre eux afin de créer la génération suivante. Cela permet à la population de s'améliorer au fil du temps.
+
+Il a été choisi que la sélection ne garde que la moitié des individus, afin que le croisement double la taille de la population. De cette manière, le nombre d'individu reste stable à chaque itération. 
+
+Toutes les méthodes sont enrichis d'un mode *élitiste*. Cela signifie que si le mode est activé, la sélection garde dans tous les cas le meilleur individu. 
+
 ### Sélection uniforme
+
+Cette méthode va aléatoirement sélectionner 50% des individus. Une mauvaise solution a donc autant de chance d'être sélectionnée qu'une bonne solution. 
+
+L'implémentation est effectuée de la manière suivante : On mélange une liste contenant la population et on retourne la première moitié de la liste mélangée. 
 
 ### Sélection par rang
 
+Cette méthode va sélectionner la moitié la plus adaptée de la population. Cela signifie qu'on en choisit que les individus ayant les meilleurs valeurs de fitness et que tous les autres sont éliminés. 
+
+Le désavantage de cette méthode est sa convergence vers un maximum local au détriment des autres solutions potentielles. 
+
+L'implémentation est effectuée de la manière suivante : On trie une liste contenant la population selon leur valeur de fitness et on retourne la première moitié de la liste triée. 
+
 ### Sélection par tournois
+
+Cette méthode va aléatoirement former des paires de chromosome qui vont ensuite *combattre* : celui qui possède une meilleure valeur de fitness va survivre, l'autre va être éliminé. 
+
+L'implémentation est effectuée de la manière suivante : On forme aléatoirement des paires de chromosome sous forme de tuple. Puis on itère sur une liste contenant toutes les paires pour ajouter à la population sélectionnée le chromosome qui possède le meilleur fitness.
 
 ### Sélection par roulette
 
+Cette méthode va aléatoirement choisir les chromosomes survivants en fonction de leur valeur de fitness : plus elle est élevée, plus l'individu a de chance d'être sélectionné. 
 
+L'implémentation est plus complexe. Nous utilisons la méthode `random.choices()` , avec les paramètres `weights` et `k`.  Le paramètre `weights` permet de donner une liste de poids de probabilités, dans notre cas, les scores des chromosomes. Le paramètre `k` représente le nombre d'individu à sélectionner, en l'occurence, la taille de la population divisée par deux. 
+
+Le problème est que notre fonction de fitness retourne des valeurs négatives alors que les poids de la fonction doivent être positifs. Pour remédier à ce problème, on ajoute un décalage constant aux scores. On récupère la plus petite valeur de score et on effectue à tous le monde le décalage de cette valeur, en ajoutant 1. De cette manière, le plus petit score vaudra 1 et tous les autres seront plus grand que 1 et donc positifs. 
 
 ***
 
@@ -300,35 +317,6 @@ Cette méthode correspond à la valeur SCRAMBLE_ALL_BITS_OF_X_GENES de l'énumé
     MUTATION_METHOD = (MutationMethod.SCRAMBLE_ALL_BITS_OF_X_GENES, 2)
 Cette méthode va choisir de manière aléatoire n genes du chromosome (ou n est la deuxième valeur de la variable globale), et mélanger de manières aléatoire tout leurs bits. Par exemple, pour le chromosome "1001100110011001" avec la valeur n=2, on pourrait obtenir: "1100100101101001" (Les 1er et 3ème gènes ont été mélangés).
 
-## Sélection dans une population
-Cette étape permet de sélectionner la partie de la population que l'on va garder pour la suite de l'algorithme. Dans notre implémentation, nous gardons la moitié de la population donnée.
-Il y a 4 méthode, et un mode élitiste à activer ou désactiver.
-La méthode utilisée est choisie en utilisant la variable globale SELECTION_METHOD, qui consiste en un tuple, avec comme première valeur, la méthode choisie, et en deuxième valeur, un booléen indiquant si l'on active (True) le mode élitiste ou non (False).
-
-### Le mode élitiste
-Le mode élitiste consiste à toujours garder dans la population la meilleure solution trouvée. Cela permet de ne pas divergé totalement d'une bonne solution. Ce mode complète les méthodes expliqué ensuite s'il est activé.
-
-### La sélection uniforme
-Cette méthode correspond à la valeur UNIFORM de l'énumération. Exemple: 
-
-    SELECTION_METHOD = (SelectionMethod.UNIFORM, True)
-La méthode de sélection uniforme consiste en la sélection de manière aléatoire de la population. Pour cela, on utilise l'algorithme de pseudo-aléatoire de python pour mélanger un tableau contenant la population, puis on sélectionne la première moitié du tableau.
-
-### La sélection par rang
-Cette méthode correspond à la valeur RANK de l'énumération. Exemple: 
-
-    SELECTION_METHOD = (SelectionMethod.RANK, True)
-La méthode de sélection par rang consiste en la sélection des meilleures chromosome. Pour cela, on tri la population selon leur résultat à la fonction de fitness, et on prend la moitié avec le meilleur résultat.
-
-### La sélection par tournoi
-Cette méthode correspond à la valeur TOURNAMENT de l'énumération. Exemple: 
-
-    SELECTION_METHOD = (SelectionMethod.TOURNAMENT, True)
-La méthode de sélection par tournoi consiste en l'organisation d'un sorte de tournoi, donc on garde les chromosomes ayant gagné leur match. Pour cela, on crée de manière aléatoire des paires avec tout les chromosomes, et on ne garde que le chromosome avec le meilleur résulat à la fonction de fitness pour chaque paire.
-
-### La sélection par roulette
-[//]: # (TODO)
-
 
 ## Génération d'une population initiale
 Cette méthode n'a pas été modifiée, et correspond donc à la version originale qui se trouvait dans le modèle de départ
@@ -346,9 +334,9 @@ Dans cette section, les différentes fonctionnalités sont évaluées afin d'en 
 
 Etant donné la quantité de réglages possibles, il n'est pas possible de tester toutes les méthodes avec tous les paramètres possibles en même temps sur un même référentiel. On se retrouverait avec des centaines de graphes différents qui deviendraient alors illisibles.
 
-Alors, des méthodes et des paramètres standards fixes ont été définis, puis chacun d'entre eux va être modifié, l'un après l'autre, et le résultat sera analysé. De cette manière, une seule variable est analysée à chaque fois. 
+Alors, des méthodes et des paramètres standards fixes ont été définis (c.f. @sec:param), puis chacun d'entre eux va être modifié, l'un après l'autre, et le résultat obtenu sera analysé. De cette manière, une seule variable est analysée à chaque fois. 
 
-## Paramètres standards
+## Paramètres standards {#sec:param}
 
 | Paramètre             | Valeur                                                   |
 | --------------------- | -------------------------------------------------------- |
@@ -398,9 +386,11 @@ Il faut donc que le taux de mutation reste inférieur à 50% pour de meilleurs r
 
 ![Evolution du fitness selon le taux de gènes mutés](assets/plot-mutation-i.png){#fig:plot-mutation-i}
 
-### Discussion & choix
+### Discussion
 
+On remarque bien sur les résultats que trop de mutation nuit à la performance de la population, tandis que trop peu empêche à la population de se diversifier. L'équilibre qu'il faut trouver fait partie de la complexité de ce problème. 
 
+**Selon ces résultats, il a été choisi la méthode de mutation suivante : inversion de 1 bit de 10% des gènes avec une incidence de 30%.** 
 
 ## Méthode de sélection
 
@@ -414,27 +404,47 @@ Sur la @fig:plot-selection-uniform est représentée l'évolution de la valeur d
 
 ![Evolution du fitness en fonction du nombre d'itérations avec la sélection uniforme](assets/plot-selection-uniform.png){#fig:plot-selection-uniform width=10cm}
 
+On remarque que la méthode converge difficilement et que l'efficacité varie fortement entre deux générations. 
+
 #### Sélection par rang
 
 Sur la @fig:plot-selection-rank est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations avec la méthode de sélection par rang.
 
 ![Evolution du fitness en fonction du nombre d'itérations avec la sélection par rang](assets/plot-selection-rank.png){#fig:plot-selection-rank width=10cm}
 
+On remarque que cette méthode converge rapidement vers maximum local et ne s'en éloigne pas. 
+
 #### Sélection par tournoi
 
-Sur la 
+Sur la @fig:plot-selection-tournament-e est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations avec la méthode de sélection par tournois en mode élitiste et sur la @fig:plot-selection-tournament en mode non-élitiste.
 
 ![Evolution du fitness en fonction du nombre d'itérations avec la sélection par tournoi (élitiste)](assets/plot-selection-tournament-e.png){#fig:plot-selection-tournament-e width=10cm}
 
-![Evolution du fitness en fonction du nombre d'itérations avec la sélection par tournoi (non-élitiste)](assets/plot-selection-tournament.png)
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par tournoi (non-élitiste)](assets/plot-selection-tournament.png){#fig:plot-selection-tournament width=10cm}
+
+On remarque que la convergence s'effectue assez rapidement. La méthode élitiste converge légèrement plus rapidement. 
 
 #### Sélection par roulette
 
-![Evolution du fitness en fonction du nombre d'itérations avec la sélection par roulette élitiste](assets/plot-selection-roulette-e.png)
+Sur la @fig:plot-selection-roulette-e est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations avec la méthode de sélection par roulette en mode élitiste et sur la @fig:plot-selection-roulette en mode non-élitiste.
 
-![Evolution du fitness en fonction du nombre d'itérations avec la sélection par roulette non-élitiste](assets/plot-selection-roulette.png)
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par roulette élitiste](assets/plot-selection-roulette-e.png){#fig:plot-selection-roulette-e width=10cm}
 
-### Discussion & choix
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par roulette non-élitiste](assets/plot-selection-roulette.png){#fig:plot-selection-roulette width=10cm}
+
+La méthode par roulette converge difficilement. Pourtant, elle devrait être au moins aussi efficace que la sélection par tournoi. Une raison qui peut expliquer ce résultat est l'implémentation de la fonction en Python. En effet, il a été nécessaire d'effectuer un décalage des scores pour avoir des valeurs positives et et les valeurs de fitness évoluent linéairement. Des solutions plus éloignées auront une valeur de fitness proche de bonnes solutions et auront donc presque la même chance d'être sélectionnées. Cela revient donc à effectuer une sélection uniforme. 
+
+Pour que cette méthode soit réellement efficace, il faudrait adapter la fonction de fitness ou la méthode de sélection par roulette. 
+
+### Discussion
+
+Il est clair que les méthodes de sélection uniforme et par roulette sont peu efficace en raison de la difficulté qu'elles ont à converger vers une solution. 
+
+La sélection par rang converge rapidement, mais elle élimine directement les solutions moins efficaces. Elle converge donc vers un maximum local mais d'autres solutions qui sont meilleures peuvent exister. 
+
+La sélection par tournoi a pour avantage de résoudre ce problème. La version élitiste permet de converger légèrement plus rapidement. 
+
+**C'est donc la méthode de sélection par tournoi élitiste qui a été choisie pour la version optimisée de l'algorithme.** 
 
 ## Méthode de croisement
 
@@ -442,29 +452,53 @@ Sur la
 
 ### Résultats
 
-![Evolution du fitness en fonction du temps selon la méthode de croisement](assets/plot-crossover.png)
+Sur la @fig:plot-crossover est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations selon la méthode de croisement. 
+
+![Evolution du fitness en fonction du temps selon la méthode de croisement](assets/plot-crossover.png){#fig:plot-crossover width=10cm}
 
 ### Discussion
+
+Les 5 méthodes de croisement différentes qui ont été testée donnent des résultats très similaires. Finalement, peu importe comment la séparation des chromosomes des parents est effectuée, chaque enfant en reçoit 50%. Dans le cas où la population n'est pas trop diversifiée, ce qui tend arriver au fil des itérations, les deux parents sont relativement semblables. 
+
+**De ce constat, il a été choisi d'utiliser la méthode de croisement en échangeant 4 parties, pour la version optimisée de l'algorithme.** 
 
 ## Nombre de gènes
 
 ### Introduction
 
+Dans cette section, on s'intéresse à la relation qui existe entre le nombre de gènes qui composent un chromosome et l'efficacité de l'algorithme, tant au niveau du temps que la précision du résultat. 
+
 ### Résultats
 
-![Evolution du fitness en fonction du temps selon le nombre de gènes de chaque individu](assets/plot-nb-genes.png)
+Sur la @fig:plot-nb-genes est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du temps selon le nombre de gènes que possède chaque chromosome. 
+
+![Evolution du fitness en fonction du temps selon le nombre de gènes de chaque individu](assets/plot-nb-genes.png){#fig:plot-nb-genes width=10cm}
 
 ### Discussion
+
+On remarque qu'un trop faible nombre de gènes a pour effet d'empêcher de trouver une solution assez précise. un grand nombre de gènes permet une plus grande liberté et une plus grande diversité mais rend les l'algorithme beaucoup plus lent. Il faut donc plus de temps pour converger vers une bonne solution. 
+
+Il faut donc choisir suffisamment de gène pour avoir une population diversifiée qui permette de trouver une solution précise mais pas trop pour ne pas ralentir l'algorithme. 
+
+**De ce constat, il a été choisit d'encoder chaque individu sur 50 gènes pour la version optimisée de l'algorithme.** 
 
 ## Taille de la population
 
 ### Introduction
 
+Dans cette section, on s'intéresse à la relation qui existe entre le nombre d'individus qui composent une population et l'efficacité de l'algorithme. 
+
 ### Résultats
 
-![Valeur de fitness à la fin de l'AG en fonction de la taille de la population](assets/plot-population-size.png)
+Sur la @fig:plot-population-size est représentée la valeur de fitness du meilleur individu à la fin de l'AG en fonction de la taille de la population.
+
+![Valeur de fitness à la fin de l'AG en fonction de la taille de la population](assets/plot-population-size.png){#fig:plot-population-size width=10cm}
 
 ### Discussion
+
+On remarque que s'il y a trop peu d'individu, la précision du résultat varie entre plusieurs tests. Alors que quand le nombre d'individu est plus grand, les variations sont quasi-inexistantes. Toutefois, une taille de population plus élevée implique un plus grand nombre de calculs à effectuer à chaque itération et donc un temps plus grand nécessaire à la convergence vers une bonne solution. 
+
+On remarque toutefois qu'à partir d'une centaine d'individu, les résultats semblent être bons et ne pas trop varier. **C'est de ce constat que la taille de la population a été choisie à 100 individus pour la version optimisée de l'algorithme.** 
 
 # Conclusion
 
