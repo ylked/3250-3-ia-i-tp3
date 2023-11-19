@@ -859,7 +859,7 @@ def selection(population: [str], scores: [float]) -> [str]:
         random.shuffle(pool)
 
         # make the pairs
-        for i in range(0, len(pool)-1, 2):
+        for i in range(0, len(pool) - 1, 2):
             c1 = pool[i]
             c2 = pool[i + 1]
             pairs.append((c1, c2))
@@ -1042,7 +1042,6 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
 
 
 if __name__ == "__main__":
-
     NB_INDIVIDUALS = 200
     NB_GENES = 100
     TARGET = math.pi

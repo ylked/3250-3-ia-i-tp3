@@ -1,6 +1,6 @@
 import numpy as np
 
-import TP3 as tp
+import Buhler_Dekhli as tp
 import math
 
 import matplotlib.pyplot as plt

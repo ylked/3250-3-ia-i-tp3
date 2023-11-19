@@ -17,7 +17,7 @@ Le script est capable de trouver une suite de nombre et d'opérateur qui donne l
 
 ## Utilisation
 
-Vous pouvez importer le module `TP3` et utiliser la fonction `run_ag()` avec les arguments suivants : 
+Vous pouvez importer le module `Buhler_Dekhli` et utiliser la fonction `run_ag()` avec les arguments suivants : 
 
 - `nb_individuals: int` Le nombre d'individus de la population (conseillé : 200)
 - `nb_genes: int` : Le nombre de gènes de chaque chromosome (conseillé : 100)
@@ -27,3 +27,8 @@ Vous pouvez importer le module `TP3` et utiliser la fonction `run_ag()` avec les
 Cette fonction retourne la population **triée par ordre décroissant de fitness** à la fin de l'algorithme. Pour évaluer le meilleur résultat, il est possible d'utiliser la fonction `evaluate()` sur le premier élément de la population reçue. 
 
 La fonction `main()` recherche par défaut le nombre $\pi$ en 5 secondes, avec une population de 200 et 100 gènes. 
+
+```bash
+python3 Buhler_Dekhli.py
+```
+

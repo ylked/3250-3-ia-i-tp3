@@ -4,7 +4,7 @@ title: Travail pratique 3 - Le Compte Est Bon
 author: |
   | Nima Dekhli 
   | Maëlys Bühler
-date: Le \today
+date: \today
 lang: fr-CH
 bibliography: sources.bib
 csl: iso690-numeric-fr.csl
@@ -25,7 +25,8 @@ sansfont: Latin Modern Sans
 
 documentclass: scrreport
 
-lofTitle: Liste des figures
+lofTitle: Table des figures
+lotTitle: Liste des tables
 lolTitle: Liste des codes
 listingTitle: Code
 lstPrefix: 
@@ -67,7 +68,9 @@ Chaque individu représente une suite de nombre et d'opérateurs. Un individu es
 
 ## Objectifs
 
-Ce document a pour but de décrire le travail effectué ainsi que les choix qui l'y ont mené. 
+Ce document a pour but de décrire le travail effectué, d'expliquer l'implémentation du programme et d'analyser les résultats obtenus. 
+
+Ceci permettra d'optimiser l'algorithme avec les bon paramètres. 
 
 
 
@@ -83,22 +86,22 @@ La manière dont sont effectuées les opérations génétiques de base (sélecti
 
 La correspondance entre le symbole (nombre ou opérateur) et l'encodage du gène est celle proposée par l'enseignant, représenté dans la @tbl:encoding.
 
-| Symbole | Encodage |
-| :-----: | -------- |
-|    0    | `0000`   |
-|    1    | `0001`   |
-|    2    | `0010`   |
-|    3    | `0011`   |
-|    4    | `0100`   |
-|    5    | `0101`   |
-|    6    | `0110`   |
-|    7    | `0111`   |
-|    8    | `1000`   |
-|    9    | `1001`   |
-|   `+`   | `1010`   |
-|   `-`   | `1011`   |
-|   `*`   | `1100`   |
-|   `/`   | `1101`   |
+| **Symbole** | **Encodage** |
+| :---------: | ------------ |
+|      0      | `0000`       |
+|      1      | `0001`       |
+|      2      | `0010`       |
+|      3      | `0011`       |
+|      4      | `0100`       |
+|      5      | `0101`       |
+|      6      | `0110`       |
+|      7      | `0111`       |
+|      8      | `1000`       |
+|      9      | `1001`       |
+|     `+`     | `1010`       |
+|     `-`     | `1011`       |
+|     `*`     | `1100`       |
+|     `/`     | `1101`       |
 
 : Encodage binaire des nombres et des opérations {#tbl:encoding}
 
@@ -159,16 +162,7 @@ L'évaluation du chromosome consiste à obtenir le résultat des opérations (va
 
 La fonction va utiliser le résultat retourné par le décodage (c.f. @sec:decodage). La chaîne de caractère qui est retournée va être divisée à chaque *espace* pour en former une liste. Chacun des éléments de la liste est soit un nombre compris entre 0 et 9 sous forme de caractère, soit un des caractères `+`, `-`, `*` ou `/`. 
 
-Les nombres peuvent être convertis en un entier à l'aide de la fonction Python `int()`. Les opérateurs sont lié à une fonction grâce à un dictionnaire qui permet d'effectuer l'opération correspondante. Le code constituant le dictionnaire est montré dans le @lst:lambda. En cas de division par zéro (qui ne devrait jamais arriver), la fonction division renvoie *NaN*. 
-
-```{#lst:lambda .py caption="Dictionnaire qui fait correspondre l'opérateur à une fonction"}
-operations = {
-    '+': lambda x, y: x + y,
-    '-': lambda x, y: x - y,
-    '*': lambda x, y: x * y,
-    '/': lambda x, y: x / y if y != 0 else float('nan')
-}
-```
+Les nombres peuvent être convertis en un entier à l'aide de la fonction Python `int()`. Les opérateurs sont lié à une fonction grâce à un dictionnaire qui permet d'effectuer l'opération correspondante. En cas de division par zéro (qui ne devrait jamais arriver), la fonction division renvoie *NaN*. 
 
 Chacun des éléments de la liste est donc ainsi interprété et un résultat numérique réel en est obtenu.
 
@@ -300,7 +294,9 @@ Alors, des méthodes et des paramètres standards fixes ont été définis (c.f.
 
 ## Paramètres standards {#sec:param}
 
-| Paramètre             | Valeur                                                   |
+Dans la @tbl:std sont donnés les paramètres standards qui seront utilisé pour les tests. 
+
+| **Paramètre**         | **Valeur**                                               |
 | --------------------- | -------------------------------------------------------- |
 | Cible                 | $\pi$                                                    |
 | Méthode de mutation   | Inversion de 1 bit sur 5 gènes avec une incidence de 30% |
@@ -309,6 +305,8 @@ Alors, des méthodes et des paramètres standards fixes ont été définis (c.f.
 | Nombre de gènes       | 30                                                       |
 | Taille de population  | 50                                                       |
 | Limite de temps [s]   | 10                                                       |
+
+: Paramètres standards pour les tests {#tbl:std}
 
 ## Méthode de mutation
 
@@ -468,7 +466,7 @@ On remarque toutefois qu'à partir d'une centaine d'individu, les résultats sem
 
 Selon l'analyse qui a été effectuée, les paramètres représentés dans la @tbl:opti ont été choisis. 
 
-| Paramètre             | Valeur                                                       |
+| **Paramètre**         | **Valeur**                                                   |
 | --------------------- | ------------------------------------------------------------ |
 | Méthode de mutation   | Inversion de 1 bit sur 10% des gènes avec une incidence de 30% |
 | Méthode de sélection  | Tournoi élitiste                                             |
@@ -509,8 +507,6 @@ En conclusion, l'algorithme génétique implémenté donne des résultats cohér
 \listoffigures
 
 \listoftables
-
-\listoflistings
 
 
 # Bibliographie {-}
