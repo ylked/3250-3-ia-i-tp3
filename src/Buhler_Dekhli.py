@@ -8,9 +8,14 @@ import textwrap
 from datetime import datetime as dt
 from enum import Enum
 
+# these variables are updated during run_ag with fitness values
+# and are used for making plots in test script
 global data
 data = None
 data_time = None
+
+# release mode for forcing default parameters
+RELEASE = True
 
 """
 ***********************************************************************************************************
@@ -854,7 +859,7 @@ def selection(population: [str], scores: [float]) -> [str]:
         random.shuffle(pool)
 
         # make the pairs
-        for i in range(0, len(pool)-1, 2):
+        for i in range(0, len(pool) - 1, 2):
             c1 = pool[i]
             c2 = pool[i + 1]
             pairs.append((c1, c2))
@@ -976,7 +981,32 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         best solution
     """
 
+    assert limit_sec > 0, 'Time limit must be greater than 0'
+    assert nb_individuals >= 10, 'Number of individuals must be greater or equal than 10'
+    assert nb_genes >= 5, 'Number of genes must be greater or equal than 5'
+
+    if RELEASE:
+        global MUTATION_METHOD, SELECTION_METHOD, CROSSOVER_METHOD
+        MUTATION_METHOD = {
+            'method': MutationMethod.INVERT_ONE_BIT_OF_X_GENES,
+            'x': nb_genes // 10,
+            'incidence_percent': 30
+        }
+        SELECTION_METHOD = (SelectionMethod.TOURNAMENT, True)
+        CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
+
     def is_time_left():
+        """
+        This methods determines whether there is still time left to make another iteration or not.
+
+        It is doing so by reading the time that was necessary to perform the last iteration, multiplying by 2
+        (just to be sure) and adding it to the current time. If the result is greater than the allowed time,
+        it returns false.
+
+        Returns:
+            True if there is enough time for another iteration, False if not.
+
+        """
         return (dt.now() - interval_start).total_seconds() * 2 + (dt.now() - start).total_seconds() < limit_sec
 
     # initialization
@@ -1012,41 +1042,29 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
 
 
 if __name__ == "__main__":
-
-    nb_individuals = 50
-    nb_genes = 100
-    target = math.pi
+    NB_INDIVIDUALS = 200
+    NB_GENES = 100
+    TARGET = math.pi
+    LIMIT = 0
 
     MUTATION_METHOD = {
         'method': MutationMethod.INVERT_ONE_BIT_OF_X_GENES,
-        'x': 4,
-        'incidence_percent': 40
+        'x': NB_GENES // 10,
+        'incidence_percent': 30
     }
 
-    SELECTION_METHOD = (SelectionMethod.ROULETTE, True)
+    SELECTION_METHOD = (SelectionMethod.TOURNAMENT, True)
     CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
 
-    sorted_population = run_ag(nb_individuals=nb_individuals, nb_genes=nb_genes, target=target, limit_sec=5)
-    print(sorted_population)
+    print(f"searching solution for target={TARGET} in {LIMIT} seconds...")
+
+    sorted_population = run_ag(nb_individuals=NB_INDIVIDUALS, nb_genes=NB_GENES, target=TARGET, limit_sec=LIMIT)
     solution = sorted_population[0]
 
     # Nous pouvons maintenant regarder le meilleur individu:
-    scores = [fitness(chromosome, target) for chromosome in sorted_population]
-    print(f"***TARGET***: {target}")
-    f = fitness(chromosome=solution, target=target)
+    scores = [fitness(chromosome, TARGET) for chromosome in sorted_population]
+    print(f"***TARGET***: {TARGET}")
+    f = fitness(chromosome=solution, target=TARGET)
     d = decode(chromosome=solution)
     e = evaluate(chromosome=solution)
     print(f"***BEST***:  fitness: {f:6.2f} (value={e})     decoded: {d}")
-
-    # Ou l'intégralité de la population:
-    for c in sorted_population:
-        f = fitness(chromosome=c, target=target)
-        d = decode(chromosome=c)
-        e = evaluate(chromosome=c)
-        print(f"fitness: {f:6.2f}  (value={e})  decoded: {d} ")
-
-    # Tests et optimisation des hyper-paramètres
-    # Maintenant que tout fonctionne, il faut s'assurer que les critères d'arrêts soient respectés et trouver des
-    # "bonnes" valeurs!
-    # Testez différentes valeurs des paramètres, et créez un plot qui affiche un fitness (p. ex. du meilleur, moyenne)
-    # en fonction du nombre d'itérations.
