@@ -70,7 +70,7 @@ Ce document a pour but de décrire le travail effectué ainsi que les choix qui 
 
 
 
-# Implémentation
+# Implémentation {#sec:impl}
 
 ## Introduction
 
@@ -195,27 +195,60 @@ Le croisement entre deux chromosome consiste à la génération de chromosomes e
 
 ### Implémentation
 
-Trois méthodes différentes détaillées dans les paragraphes suivants ont été implémentées. Le croisement retourne toujours exactement deux enfants.
+Trois méthodes différentes détaillées dans les paragraphes suivants ont été implémentées. Le croisement retourne toujours exactement deux enfants. Afin de simplifier l'implémentation, il a été décidé de supposer que les deux chromosomes parents sont toujours de taille égale.
 
 #### Découpage en $n$ parties
 
-Le principe est le suivant : Le chromosome de chacun des deux parent est divisé en $n$ parties de taille égale. 
+Le principe est le suivant : Le chromosome de chacun des deux parent est divisé en $n$ parties de taille égale. Ensuite, le premier enfant prend la première partie du premier parent, la deuxième partie du deuxième parent, la troisième partie du premier parent et ainsi de suite. 
 
-#### Echange tous les $n$ bits
+C'est la même chose pour le deuxième enfant mais dans l'autre sens. 
+
+#### Echange tous les $n$ bits {#sec:crossnbits}
+
+Au lieu de découper le chromosome en $n$ parties, on découpe le chromosome et on fait un échange tous les $n$ bits. 
 
 #### Echange tous les $n$ gènes
 
-
+C'est le même principe que la méthode @sec:crossnbits, mais on échange tous les $n$ gènes au lieu des $n$ bits.
 
 ### Croisement d'une population
 
+Le croisement de la population consiste à créer une nouvelle génération constituée des enfants de la génération courante. Dans l'implémentation actuelle, à chaque croisement, la taille de la population double. Cela permet de diviser la taille de la population par un facteur 2 lors de la sélection.
+
+Pour effectuer cette opération, une liste contenant l'intégralité de la population est mélangée, puis le premier élément est croisé avec le second, le second avec le troisième et ainsi de suite. Le dernier élément de la liste est croisé avec le premier. 
+
+Cela permet d'effectuer un croisement de population de manière aléatoire, sans pour autant effectuer deux fois le même croisement (sauf si des doublons existent déjà dans la population). Chaque chromosome est donc croisé avec ses deux voisins. 
+
+## Mutation
+
+### Principe
+
+### Inversion de $n$ bits
+
+### Inversion de 1 bit sur $n$ gènes
+
+### Inversion de tous les bits sur $n$ gènes
+
+### Mélange des bits de $n$ gènes
+
+## Sélection
+
+### Principe
+
+### Sélection uniforme
+
+### Sélection par rang
+
+### Sélection par tournois
+
+### Sélection par roulette
 
 
-Le crossover de deux chromosomes consiste à retourner 2 chromosomes, qui sont des mélanges des deux chromosomes de base.  
-Pour le crossover, on a 3 méthodes possibles. La méthode utilisée est choisie en utilisant la variable globale CROSSOVER_METHOD, qui consiste en un tuple, avec comme première valeur, la méthode choisie, et en deuxième valeur, le paramètre de la méthode (une valeur entière).  
-Pour rendre l'implémentation plus facile, nous partons du principe que les deux chromosomes obtenus en paramètre sont de même longueur, et les chromosomes qui résulte de la fonction seront aussi aussi de la même longueur que leurs parents
+
+***
 
 ### Découpage des chromosomes en un nombre n de parties
+
 Cette méthode correspond à la valeur EXCHANGE_X_PARTS. Exemple de valeur de la variable globale:
 
     CROSSOVER_METHOD = (CrossoverMethod.EXCHANGE_X_PARTS, 4)
@@ -238,14 +271,6 @@ Cette méthode correspond à la valeur EXCHANGE_EACH_X_GENE. Exemple de valeur d
 Cette méthode va échanger les genes une fois sur deux, tout les n nombre de genes (n étant la valeur indiquée dans la variable globale).  
 Par exemple, pour la valeur passé en paramètre 1, et les deux chromosomes suivants: "0000000000000000" et "1111111111111111", on obtiendra les enfants suivant:
 "0000111100001111" et "1111000011110000".
-
-## Crossover sur une population
-Le crossover sur une population a comme objectif de prendre une population initiale, et retourner une population d'enfant de la population initiale.
-Nous avons décidé que la population d'enfant doit être 2 fois plus grande que celle de ses parents. Cela, pour permettre de rééquilibrer la taille de la population, car lors de la sélection, nous ne gardons que la moitié de la population.  
-Pour faire cela, on prend deux chromosome de la population initale, on applique la fonction de crossover, puis on recommence avec un autre couple de chromosome.
-Pour obtenir une population finale de taille 2 fois supérieure à la population initiale, nous avons conclu qu'il fallait que chaque chromosome participe à un crossover 2 fois, chaque fois avec un partenaire différent.  
-Pour faire cela, nous avons décidé que l'on itérerait sur chaque chromosome d'une liste contenant la population, et qu'à chaque itération, le chromosome actuel ferait un crossover avec le chromosome suivant. Le dernier chromosome de la liste prendra comme partenaire le premier chromosome de la liste.  
-De cette manière, chaque chromosome va faire un crossover avec ses deux voisins dans la liste.
 
 ## Mutation d'un chromosome
 La mutation d'un chromosome consiste à modifier son contenu.  
@@ -313,17 +338,133 @@ Cette méthode n'a pas été modifiée, et correspond donc à la version origina
 
 # Analyse
 
+## Introduction
+
+Comme vu dans la @sec:iml, plusieurs méthodes ont été implémentées, que ce soit pour la mutation, la sélection ou le croisement. De plus, chacune d'entre elles peuvent être ajustées avec un ou plusieurs paramètres. 
+
+Dans cette section, les différentes fonctionnalités sont évaluées afin d'en déduire les méthodes et les paramètres les plus efficaces. 
+
+Etant donné la quantité de réglages possibles, il n'est pas possible de tester toutes les méthodes avec tous les paramètres possibles en même temps sur un même référentiel. On se retrouverait avec des centaines de graphes différents qui deviendraient alors illisibles.
+
+Alors, des méthodes et des paramètres standards fixes ont été définis, puis chacun d'entre eux va être modifié, l'un après l'autre, et le résultat sera analysé. De cette manière, une seule variable est analysée à chaque fois. 
+
+## Paramètres standards
+
+| Paramètre             | Valeur                                                   |
+| --------------------- | -------------------------------------------------------- |
+| Cible                 | $\pi$                                                    |
+| Méthode de mutation   | Inversion de 1 bit sur 5 gènes avec une incidence de 30% |
+| Méthode de sélection  | Tournoi élitiste                                         |
+| Méthode de croisement | Echange de 4 parties                                     |
+| Nombre de gènes       | 30                                                       |
+| Taille de population  | 50                                                       |
+| Limite de temps [s]   | 10                                                       |
+
 ## Méthode de mutation
+
+### Introduction
+
+Dans cette section, les trois méthodes de mutations sont testées et analysées.
+
+### Résultats
+
+#### Méthode
+
+Sur la @fig:plot-mutation-method est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations, selon la méthode de mutation utilisée. 
+
+On en déduit que les méthodes les plus efficaces sont l'inversion de 5 bits ou d'un bit sur 5 gènes. 
+
+La mutation trop importante du chromosome fait fortement varier l'efficacité de la population ou l'empêche de s'améliorer.
+
+![Evolution du fitness selon la méthode de mutation](assets/plot-mutation-method.png){#fig:plot-mutation-method}
+
+#### Nombre de gènes affectés
+
+Sur la @fig:plot-mutation-x est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations, selon le nombre de gènes affectés par la mutation. 
+
+On remarque clairement qu'un trop grand nombre de gènes mutés font drastiquement varier la performance des individus (en rouge), tandis qu'un trop faible nombre de gènes mutés font stagner la performance à une valeur inférieure (en bleu). 
+
+On en conclut que la meilleure stratégie est de muter environ 10% des gènes. 
+
+![Evolution du fitness selon le nombre de gènes mutés](assets/plot-mutation-x.png){#fig:plot-mutation-x}
+
+#### Incidence
+
+Sur la @fig:plot-mutation-i est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itération, selon le taux d'incidence de mutation. Ce chiffre correspond à la probabilité qu'a un chromosome d'être muté. 
+
+On remarque qu'un trop grand nombre de chromosome mutés (> 75%) implique une forte variation de la performance. 
+
+Il faut donc que le taux de mutation reste inférieur à 50% pour de meilleurs résultats.
+
+![Evolution du fitness selon le taux de gènes mutés](assets/plot-mutation-i.png){#fig:plot-mutation-i}
+
+### Discussion & choix
 
 
 
 ## Méthode de sélection
 
+### Introduction
+
+### Résultats
+
+#### Sélection uniforme
+
+Sur la @fig:plot-selection-uniform est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations avec la sélection uniforme. 
+
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection uniforme](assets/plot-selection-uniform.png){#fig:plot-selection-uniform width=10cm}
+
+#### Sélection par rang
+
+Sur la @fig:plot-selection-rank est représentée l'évolution de la valeur de fitness du meilleur individu en fonction du nombre d'itérations avec la méthode de sélection par rang.
+
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par rang](assets/plot-selection-rank.png){#fig:plot-selection-rank width=10cm}
+
+#### Sélection par tournoi
+
+Sur la 
+
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par tournoi (élitiste)](assets/plot-selection-tournament-e.png){#fig:plot-selection-tournament-e width=10cm}
+
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par tournoi (non-élitiste)](assets/plot-selection-tournament.png)
+
+#### Sélection par roulette
+
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par roulette élitiste](assets/plot-selection-roulette-e.png)
+
+![Evolution du fitness en fonction du nombre d'itérations avec la sélection par roulette non-élitiste](assets/plot-selection-roulette.png)
+
+### Discussion & choix
+
 ## Méthode de croisement
+
+### Introduction
+
+### Résultats
+
+![Evolution du fitness en fonction du temps selon la méthode de croisement](assets/plot-crossover.png)
+
+### Discussion
 
 ## Nombre de gènes
 
+### Introduction
+
+### Résultats
+
+![Evolution du fitness en fonction du temps selon le nombre de gènes de chaque individu](assets/plot-nb-genes.png)
+
+### Discussion
+
 ## Taille de la population
+
+### Introduction
+
+### Résultats
+
+![Valeur de fitness à la fin de l'AG en fonction de la taille de la population](assets/plot-population-size.png)
+
+### Discussion
 
 # Conclusion
 
@@ -335,6 +476,13 @@ Cette méthode n'a pas été modifiée, et correspond donc à la version origina
 
 
 
-# Bibliographie
+\listoffigures
+
+\listoftables
+
+\listoflistings
+
+
+# Bibliographie {-}
 
 \printbibliography
