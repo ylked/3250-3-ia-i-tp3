@@ -498,7 +498,7 @@ L'implémentation, permettant la configuration simple des méthodes et des param
 
 Dans sa version finale et optimisée, l'algorithme est capable de trouver une suite de nombre et d'opérateur qui donne la cible en quelques dizaines d'itérations seulement. La limite de temps donné est toujours strictement respectée. 
 
-La précision des solutions trouvée est toujours inférieure à 0.001, avec les paramètres optimisés et une limite de temps supérieure à 5 secondes. 
+La précision des solutions trouvée est toujours inférieure à 0.1, avec les paramètres optimisés et une limite de temps supérieure à 5 secondes. 
 
 Toutefois, la fonction de fitness linéaire n'est pas optimale, en particulier lors de l'utilisation de la méthode de sélection par roulette. La précision des solutions pourrait aussi être améliorée. 
 
