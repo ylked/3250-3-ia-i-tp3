@@ -473,8 +473,8 @@ Selon l'analyse qui a été effectuée, les paramètres représentés dans la @t
 | Méthode de mutation   | Inversion de 1 bit sur 10% des gènes avec une incidence de 30% |
 | Méthode de sélection  | Tournoi élitiste                                             |
 | Méthode de croisement | Echange de 4 parties                                         |
-| Nombre de gènes       | 50                                                           |
-| Taille de population  | 100                                                          |
+| Nombre de gènes       | 100                                                          |
+| Taille de population  | 200                                                          |
 
 : Paramètres de l'algorithme optimisé {#tbl:opti}
 
