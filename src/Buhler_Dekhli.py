@@ -981,6 +981,10 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         best solution
     """
 
+    assert limit_sec > 0, 'Time limit must be greater than 0'
+    assert nb_individuals >= 10, 'Number of individuals must be greater or equal than 10'
+    assert nb_genes >= 5, 'Number of genes must be greater or equal than 5'
+
     if RELEASE:
         global MUTATION_METHOD, SELECTION_METHOD, CROSSOVER_METHOD
         MUTATION_METHOD = {
@@ -1042,7 +1046,7 @@ if __name__ == "__main__":
     NB_INDIVIDUALS = 200
     NB_GENES = 100
     TARGET = math.pi
-    LIMIT = 5
+    LIMIT = 0
 
     MUTATION_METHOD = {
         'method': MutationMethod.INVERT_ONE_BIT_OF_X_GENES,
