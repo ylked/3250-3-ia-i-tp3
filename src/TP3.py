@@ -8,6 +8,10 @@ import textwrap
 from datetime import datetime as dt
 from enum import Enum
 
+global data
+data = None
+data_time = None
+
 """
 ***********************************************************************************************************
 Commencez par implémenter les fonctions `decode` et `evaluate`, en reprenant les signatures ci-dessous.
@@ -111,13 +115,13 @@ class MutationMethod(Enum):
 # The default mutation method the AG should use
 MUTATION_METHOD = {
     # the method
-    'method': MutationMethod.INVERT_ALL_BITS_OF_X_GENES,
+    'method': MutationMethod.INVERT_ONE_BIT_OF_X_GENES,
 
     # the X parameter (referring to the x argument of the above method)
-    'x': 1,
+    'x': 5,
 
     # The probability a chromosome gets mutated
-    'incidence_percent': 2
+    'incidence_percent': 50
 }
 
 
@@ -142,7 +146,7 @@ class SelectionMethod(Enum):
 # The default selection method the AG should use
 # 1. first element is the method
 # 2. second element is elitist mode (true/false) to always keep the best individual
-SELECTION_METHOD = (SelectionMethod.RANK, True)
+SELECTION_METHOD = (SelectionMethod.TOURNAMENT, True)
 
 
 def decode(chromosome: str) -> str:
@@ -343,7 +347,7 @@ def evaluate(chromosome: str) -> float:
         else:
             raise Exception('Unknown or invalid gene type')
 
-    return float(res)
+    return float(res) if res is not None else -1000
 
 
 """
@@ -850,7 +854,7 @@ def selection(population: [str], scores: [float]) -> [str]:
         random.shuffle(pool)
 
         # make the pairs
-        for i in range(0, len(pool), 2):
+        for i in range(0, len(pool)-1, 2):
             c1 = pool[i]
             c2 = pool[i + 1]
             pairs.append((c1, c2))
@@ -978,6 +982,10 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
     # initialization
 
     population = generate(nb_individuals, nb_genes)
+    global data
+    global data_time
+    data = []
+    data_time = []
 
     start = dt.now()
     interval_start = dt.now()
@@ -993,6 +1001,10 @@ def run_ag(nb_individuals: int, nb_genes: int, target: float, limit_sec: float) 
         population = population_crossover(population)
         # mutation
         population = [mutation(chromosome) for chromosome in population]
+
+        best = sorted(population, key=lambda x: fitness(x, target), reverse=True)[0]
+        data.append(best)
+        data_time.append((dt.now() - start).total_seconds())
 
     _p = sorted(population, key=lambda x: fitness(x, target), reverse=True)
 
