@@ -173,7 +173,7 @@ Chacun des éléments de la liste est donc ainsi interprété et un résultat nu
 
 ### Principe
 
-Une fonction de fitness permet d'évaluer l'efficacité d'une solution. Elle fait correspondre un individu avec un score, représenté par un nombre réel. Plus cette valeur est élevée, plus la solution est efficace.
+Une fonction de fitness permet d'évaluer l'efficacité d'une solution. Elle fait correspondre un individu et un score, représenté par un nombre réel. Plus cette valeur est élevée, plus la solution que représente l'individu est efficace.
 
 ### Implémentation
 
@@ -312,6 +312,18 @@ Cette méthode n'a pas été modifiée, et correspond donc à la version origina
 Cette méthode n'a pas été modifiée, et correspond donc à la version originale qui se trouvait dans le modèle de départ
 
 # Analyse
+
+## Méthode de mutation
+
+
+
+## Méthode de sélection
+
+## Méthode de croisement
+
+## Nombre de gènes
+
+## Taille de la population
 
 # Conclusion
 
