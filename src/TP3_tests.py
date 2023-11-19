@@ -5,7 +5,7 @@ import math
 
 import matplotlib.pyplot as plt
 
-LIMIT_SEC = 2
+LIMIT_SEC = 10
 TARGET = math.pi
 NB_GENES = 30
 NB_INDIVIDUALS = 50
@@ -111,6 +111,7 @@ def test_mutation():
         f_values = [tp.fitness(c, TARGET) for c in tp.data]
         plt.plot(f_values, label=f'incidence de {incid["incidence_percent"]}%')
 
+    plt.title("Evolution du fitness selon l'incidence de mutation")
     plt.xlabel("Nombre d'itérations")
     plt.ylabel("Valeur de fitness")
     plt.legend()
@@ -136,12 +137,10 @@ def test_selection():
         tp.run_ag(NB_INDIVIDUALS, NB_GENES, TARGET, LIMIT_SEC)
         result = get_fitness_values()
 
-        plt.plot(result, label=m[1])
-
-        plt.title("Evolutionn du fitness selon la méthode de sélection")
+        plt.plot(result)
+        plt.title(f"Evolution du fitness selon la méthode : {m[1]} ")
         plt.xlabel("Nombre d'itérations")
         plt.ylabel("Valeur de fitness")
-        plt.legend()
         plt.show()
 
 
@@ -158,8 +157,7 @@ def test_crossover():
     methods_1 = (
         (1, 'Echange à chaque bit'),
         (2, 'Echange tous les deux bits'),
-        (4, f'Echange de {NB_GENES // 4} parties'),
-        (5, f'Echange de {NB_GENES // 5} parties'),
+        (6, f'Echange de {NB_GENES // 6} parties'),
         (10, f'Echange de {NB_GENES // 10} parties')
     )
 
@@ -259,10 +257,63 @@ def test_nb_individus():
     plt.legend()
     plt.show()
 
+def test_final():
+    nb_indiv = 100
+    nb_genes = 50
+    limit = 5
+    tp.MUTATION_METHOD = {
+        'method': tp.MutationMethod.INVERT_ONE_BIT_OF_X_GENES,
+        'x': nb_genes//10,
+        'incidence_percent': 30
+    }
+    tp.SELECTION_METHOD = (tp.SelectionMethod.TOURNAMENT, True)
+    tp.CROSSOVER_METHOD = (tp.CrossoverMethod.EXCHANGE_X_PARTS, 4)
+
+    targets = (math.pi, 39, -25.43, 15.5)
+    global TARGET
+
+    for t in targets:
+        TARGET = t
+        res = tp.run_ag(nb_indiv, nb_genes, t, limit)
+        plt.plot(get_fitness_values(), label=f"cible = {t}")
+
+    plt.title("Evolution du fitness de l'AG optimisé")
+    plt.xlabel("Nombre d'itérations")
+    plt.ylabel("Valeur de fitness")
+    plt.legend()
+    plt.show()
+
+def test_final_high():
+    nb_indiv = 100
+    nb_genes = 50
+    limit = 5
+    tp.MUTATION_METHOD = {
+        'method': tp.MutationMethod.INVERT_ONE_BIT_OF_X_GENES,
+        'x': nb_genes//10,
+        'incidence_percent': 30
+    }
+    tp.SELECTION_METHOD = (tp.SelectionMethod.TOURNAMENT, True)
+    tp.CROSSOVER_METHOD = (tp.CrossoverMethod.EXCHANGE_X_PARTS, 4)
+
+    global TARGET
+
+    t = 20000
+    TARGET = t
+    res = tp.run_ag(nb_indiv, nb_genes, t, limit)
+    plt.plot(get_fitness_values())
+    plt.title("Evolution du fitness de l'AG optimisé pour la cible 20'000")
+    plt.xlabel("Nombre d'itérations")
+    plt.ylabel("Valeur de fitness")
+    plt.show()
 
 if __name__ == '__main__':
+    #test_final_high()
+    #exit(0)
+    #test_final()
     test_mutation()
     test_selection()
     test_crossover()
     test_nb_genes()
     test_nb_individus()
+
+
